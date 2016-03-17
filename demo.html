@@ -10,6 +10,7 @@
 
 </div>
 
+<script type="text/javascript" src="./bin/surfacechart.js"></script>
 <script type="text/javascript">
    function  request(url, completion) {
        var xhr = new XMLHttpRequest();
@@ -25,19 +26,15 @@
         xhr.send();
     };
 
-   function generateArray(dataStr) {
-       //将空白,换行符都替换成逗号,然后分割成数组
-       var newStr = dataStr.replace(/\s/g, ',');
-       var arr = newStr.split(',');
-       console.log(arr);
-
-   }
-
    var dataURL = './data0.txt';
    var rowCount = 27;
    var colCount = 28;
    request(dataURL, function(dataStr) {
-       generateArray(dataStr);
+        //将空白,换行符都替换成逗号,然后分割成数组
+       var newStr = dataStr.replace(/\s/g, ',');
+       var arr = newStr.split(',');
+       var container = document.getElementById('surfaceChart_Container');
+       var chart = new SurfaceChart(container, arr, 27, 28);
    });
 </script>
 
