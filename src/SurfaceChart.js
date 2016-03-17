@@ -21,14 +21,15 @@ export class SurfaceChart {
         }
         //选第一个值做为起始参考值
         this.minValue = this.maxValue = parseFloat(dataArr[0]);
-        if (!this.minValue) {
-            this._throwDataTypeError();
-        }
+        this._validateDataType(this.minValue);
         this._formatData(dataArr);
     }
 
-    _throwDataTypeError() {
-        throw new Error('SurfaceChart 需要的数据项必须是整数或浮点数');
+    _validateDataType(data) {
+        if (data === undefined) {
+            //console.log(data);
+            throw new Error('SurfaceChart 需要的数据项必须是整数或浮点数');
+        }
     }
 
     /**
@@ -43,9 +44,7 @@ export class SurfaceChart {
 
         for (let i=1; i<dataArr.length; i++) {
             let value = parseFloat(dataArr[i]);
-            if (!value) {
-                this._throwDataTypeError();
-            }
+            this._validateDataType(value);
             if (value < this.minValue) {
                 this.minValue = value;
             } else if (value > this.maxValue) {
@@ -53,16 +52,13 @@ export class SurfaceChart {
             }
             this.dataSource.push(value);
         }
-        //this.minValue = Math.floor(this.minValue);
-        //this.maxValue = Math.ceil(this.maxValue);
+
         let distance = Math.abs(this.maxValue - this.minValue) ;
         //为了图形美观,坐标上的刻度值应该做一定的舍入
         let gap = distance /(this.referenceLineCount - 1).toFixed(1);
         gap = this._calculateGap(gap, 1);
         console.log('gap: ', gap);
 
-        this.minValue -= extensionValue;
-        this.maxValue += extensionValue;
     }
 
     /**

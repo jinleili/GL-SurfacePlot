@@ -94,16 +94,17 @@
 	        }
 	        //选第一个值做为起始参考值
 	        this.minValue = this.maxValue = parseFloat(dataArr[0]);
-	        if (!this.minValue) {
-	            this._throwDataTypeError();
-	        }
+	        this._validateDataType(this.minValue);
 	        this._formatData(dataArr);
 	    }
 
 	    _createClass(SurfaceChart, [{
-	        key: '_throwDataTypeError',
-	        value: function _throwDataTypeError() {
-	            throw new Error('SurfaceChart 需要的数据项必须是整数或浮点数');
+	        key: '_validateDataType',
+	        value: function _validateDataType(data) {
+	            if (data === undefined) {
+	                //console.log(data);
+	                throw new Error('SurfaceChart 需要的数据项必须是整数或浮点数');
+	            }
 	        }
 
 	        /**
@@ -121,9 +122,7 @@
 
 	            for (var i = 1; i < dataArr.length; i++) {
 	                var value = parseFloat(dataArr[i]);
-	                if (!value) {
-	                    this._throwDataTypeError();
-	                }
+	                this._validateDataType(value);
 	                if (value < this.minValue) {
 	                    this.minValue = value;
 	                } else if (value > this.maxValue) {
