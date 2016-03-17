@@ -1,5 +1,5 @@
 {
-  "name": "Surface Chart",
+  "name": "SurfaceChart",
   "version": "0.1.0",
   "description": "3D 曲面图表控件",
   "author": "李金磊",
@@ -10,6 +10,6 @@
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-3": "^6.5.0",
     "babel-loader":"^6.2.4",
-    "webpack": "^1.12.14",
+    "webpack": "^1.12.14"
   }
 }

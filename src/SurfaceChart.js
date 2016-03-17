@@ -7,6 +7,8 @@ export class SurfaceChart {
         this.parentElement = container;
         this.width = this.parentElement.style.width;
         this.height = this.parentElement.style.height;
+        //参考线条数
+        this.referenceLineCount = 6;
 
         if (this.width < 300 || this.height < 200) {
             throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
@@ -51,12 +53,32 @@ export class SurfaceChart {
             }
             this.dataSource.push(value);
         }
-        ////为了图形美观,坐标上的最小最大值应该做一定的延展
         //this.minValue = Math.floor(this.minValue);
         //this.maxValue = Math.ceil(this.maxValue);
         let distance = Math.abs(this.maxValue - this.minValue) ;
+        //为了图形美观,坐标上的刻度值应该做一定的舍入
+        let gap = distance /(this.referenceLineCount - 1).toFixed(1);
+        gap = this._calculateGap(gap, 1);
+        console.log('gap: ', gap);
 
         this.minValue -= extensionValue;
         this.maxValue += extensionValue;
+    }
+
+    /**
+     * 将 y 轴上的刻度值做舍入, 使数值看起来更漂亮
+     * @param gap
+     * @param limit
+     * @returns {*}
+     * @private
+     */
+    _calculateGap(gap, limit) {
+        if (gap < limit) {
+            return gap;
+        } else {
+            limit *= 10;
+            let newValue = (gap/limit).toFixed(1) * limit;
+            return this._calculateGap(newValue,  limit);
+        }
     }
 }

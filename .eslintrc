@@ -1,0 +1,26 @@
+{
+  "ecmaFeatures": {
+    "arrowFunctions": true,
+    "binaryLiterals": true,
+    "destructuring": true,
+    "jsx": true,
+    "modules": true,
+    "defaultParams": true,
+    "superInFunctions": true,
+    "newTarget": true
+  },
+  "env": {
+    "browser": true,
+    "worker": true,
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "strict": 0,
+    "no-underscore-dangle": 0,
+    "quotes": [
+      2,
+      "single"
+    ]
+  }
+}
