@@ -19,6 +19,8 @@ export class SurfaceChart {
         if (rowCount < 2 || colCount < 2) {
             throw new Error('SurfaceChart 至少需要两行两列数据 ');
         }
+        //y 轴上的标尺数据集
+        this.scaleLabels = [];
         //选第一个值做为起始参考值
         this.minValue = this.maxValue = parseFloat(dataArr[0]);
         this._validateDataType(this.minValue);
@@ -57,8 +59,21 @@ export class SurfaceChart {
         //为了图形美观,坐标上的刻度值应该做一定的舍入
         let gap = distance /(this.referenceLineCount - 1).toFixed(1);
         gap = this._calculateGap(gap, 1);
-        console.log('gap: ', gap);
 
+        if (this.maxValue > 0 ) {
+            this.scaleLabels.push(0);
+        }
+        if (this.maxValue < 0) {
+            this.scaleLabels.push(this.maxValue);
+            for (let i=1; i<= this.referenceLineCount; i++) {
+                let value = (this.maxValue + gap*i) * -1;
+                this.scaleLabels.push(value);
+                if (value <= this.minValue) {
+                    break;
+                }
+            }
+        }
+        console.log('gap: ', gap);
     }
 
     /**
