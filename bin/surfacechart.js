@@ -78,10 +78,8 @@
 	        _classCallCheck(this, SurfaceChart);
 
 	        this.parentElement = container;
-	        this.width = this.parentElement.style.width;
-	        this.height = this.parentElement.style.height;
-	        //参考线条数
-	        this.referenceLineCount = 6;
+	        this.width = this.parentElement.offsetWidth;
+	        this.height = this.parentElement.offsetHeight;
 
 	        if (this.width < 300 || this.height < 200) {
 	            throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
@@ -92,6 +90,13 @@
 	        if (rowCount < 2 || colCount < 2) {
 	            throw new Error('SurfaceChart 至少需要两行两列数据 ');
 	        }
+	        //参考线条数
+	        this.referenceLineCount = 6;
+	        //y 轴上的标尺数据集
+	        this.scaleLabels = [];
+	        // y 轴上的 数值<=>像素 缩放比
+	        this.dataScale = 0;
+
 	        //选第一个值做为起始参考值
 	        this.minValue = this.maxValue = parseFloat(dataArr[0]);
 	        this._validateDataType(this.minValue);
@@ -110,7 +115,7 @@
 	        /**
 	         * 格式化数据
 	         *
-	         * 获取最小最大值及 x, y 轴上的 数值<=>像素 缩放比
+	         * 获取最小最大值及  y 轴上的 数值<=>像素 缩放比
 	         * @param dataArr
 	         * @private
 	         */
@@ -130,16 +135,29 @@
 	                }
 	                this.dataSource.push(value);
 	            }
-	            //this.minValue = Math.floor(this.minValue);
-	            //this.maxValue = Math.ceil(this.maxValue);
+
 	            var distance = Math.abs(this.maxValue - this.minValue);
 	            //为了图形美观,坐标上的刻度值应该做一定的舍入
 	            var gap = distance / (this.referenceLineCount - 1).toFixed(1);
 	            gap = this._calculateGap(gap, 1);
-	            console.log('gap: ', gap);
 
-	            this.minValue -= extensionValue;
-	            this.maxValue += extensionValue;
+	            var currentLabel = 0;
+	            if (this.maxValue > 0 && this.minValue < 0) {
+	                while (currentLabel < this.maxValue) {
+	                    currentLabel += gap;
+	                    this.scaleLabels.unshift(currentLabel);
+	                }
+	                currentLabel = 0;
+	            } else {
+	                currentLabel = this.maxValue;
+	            }
+	            this.scaleLabels.push(currentLabel);
+	            while (currentLabel > this.minValue) {
+	                currentLabel -= gap;
+	                this.scaleLabels.push(currentLabel);
+	            }
+	            this.dataScale = (this.height - 100) / Math.abs(this.scaleLabels[0] - this.scaleLabels[this.scaleLabels.length - 1]);
+	            console.log('scaleLabels: ', this.height, this.dataScale);
 	        }
 
 	        /**
