@@ -29,4 +29,15 @@
 
 ``` javascript
 
+ var arr = [[1, 2, 3, 1, 2, 3], [1, 2, 3, 1, 2, 3], [1, 2, 3, 1, 2, 3], [1, 2, 3, 1, 2, 3]];
+ var chartWidth = 600;
+ var chartHeight = 500;
+ 
+ // 生成图表实例
+ var chart = new SurfaceChart(arr, chartWidth, chartHeight);
+ 
+ // 将曲面图显示到网页
+ var container = document.getElementById('surfaceChart_Container');
+ container.appendChild(chart.domElement);
+       
 ```

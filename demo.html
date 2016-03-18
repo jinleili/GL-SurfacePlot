@@ -27,14 +27,37 @@
     };
 
    var dataURL = './data0.txt';
-   var rowCount = 27;
    var colCount = 28;
    request(dataURL, function(dataStr) {
         //将空白,换行符都替换成逗号,然后分割成数组
        var newStr = dataStr.replace(/\s/g, ',');
        var arr = newStr.split(',');
+
+       //将一维数组按行列数分割为二维数组
+       var newArr = [];
+       var rowArr = new Array();
+
+       // 数据集很大时,缓存arr.length这种优化有必要的
+       var arrLength = arr.length;
+       for (var i=0; i<arrLength; i++) {
+           var m = i % colCount;
+           if (i > 0 && m === 0) {
+               newArr.push(rowArr.slice(0));
+               rowArr = new Array();
+           }
+           rowArr.push(arr[i]);
+       }
+       newArr.push(rowArr.slice(0));
+
+       var chartWidth = 600;
+       var chartHeight = 500;
+
+       // 生成图表实例
+       var chart = new SurfaceChart(newArr, chartWidth, chartHeight);
+
+       // 将曲面图显示到网页
        var container = document.getElementById('surfaceChart_Container');
-       var chart = new SurfaceChart(container, arr, 27, 28);
+       container.appendChild(chart.domElement);
    });
 </script>
 
