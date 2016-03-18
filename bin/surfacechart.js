@@ -251,53 +251,18 @@
 	    value: true
 	});
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	/**
 	 * Created by grenlight on 16/3/18.
 	 */
 
-	var ChartCanvas = exports.ChartCanvas = function () {
-	    function ChartCanvas(width, height) {
-	        _classCallCheck(this, ChartCanvas);
+	var ChartCanvas = exports.ChartCanvas = function ChartCanvas(width, height) {
+	    _classCallCheck(this, ChartCanvas);
 
-	        this.renderer = PIXI.autoDetectRenderer(width, height, {
-	            transparent: true,
-	            interactive: false,
-	            resolution: window.devicePixelRatio
-	        });
-	        this.renderer.view.setAttribute('style', 'margin:0px; -webkit-tap-highlight-color:rgba(0, 0, 0, 0); width:' + width + 'px; height: ' + height + 'px');
-	        this.stage = new PIXI.Container();
-	        this.graphics = new PIXI.Graphics();
-	    }
-
-	    _createClass(ChartCanvas, [{
-	        key: 'drawBubbleView',
-	        value: function drawBubbleView(graphics, color) {
-	            graphics.clear();
-	            graphics.beginFill(color);
-	            graphics.drawRoundedRect(this.frame.x, this.frame.y, this.frame.width, this.frame.height, this.cornerRadius);
-
-	            var anglePointY = void 0,
-	                angleBottomY = void 0;
-	            if (this.isUpDirection) {
-	                anglePointY = this.angleFrame.y;
-	                angleBottomY = this.angleFrame.getMaxY();
-	            } else {
-	                anglePointY = this.angleFrame.getMaxY();
-	                angleBottomY = this.angleFrame.y;
-	            }
-	            graphics.moveTo(this.angleFrame.x, angleBottomY);
-	            graphics.lineTo(this.angleFrame.center.x, anglePointY);
-	            graphics.lineTo(this.angleFrame.getMaxX(), angleBottomY);
-	            graphics.endFill();
-	        }
-	    }]);
-
-	    return ChartCanvas;
-	}();
+	    this.renderer = null;
+	    this.renderer.view.setAttribute('style', 'margin:0px; -webkit-tap-highlight-color:rgba(0, 0, 0, 0); width:' + width + 'px; height: ' + height + 'px');
+	};
 
 /***/ }
 /******/ ]);
