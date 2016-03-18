@@ -2,9 +2,10 @@
  * Created by grenlight on 16/3/17.
  */
 
+import  { ChartCanvas } from './ChartCanvas.js';
+
 export class SurfaceChart {
     constructor(dataArr,  width = 600, height = 500) {
-        this.domElement = null;
         this.width = width;
         this.height = height;
         this.paddingLR = 50;
@@ -17,6 +18,10 @@ export class SurfaceChart {
         if (!dataArr || dataArr.length === 0) {
             throw new Error('SurfaceChart 需要有效数组做为初始化参数');
         }
+        
+        this.canvas = new ChartCanvas(width, height);
+        this.domElement = this.canvas.renderer.view;
+
         this.rowCount = dataArr.length;
         this._validateRowAndCol(this.rowCount);
         this.colCount = dataArr[0].length;
@@ -90,7 +95,7 @@ export class SurfaceChart {
         let z = -colGap;
         for (let i=0; i<this.rowCount; i++) {
             z += colGap;
-            
+
             let x = -colGap;
             let rowData = this.dataSource[i];
             for (let j=0; j<this.colCount; j++) {

@@ -15,16 +15,6 @@
 // 编译源码
 > $ build.sh
 
-##  编译依赖库 PIXI.js
-
-> $ cd pixi
-
-> $ npm install -g gulp
-
-> $ npm install
-// extras, loaders 目前这份代码去不掉
-> $ gulp build --exclude extras --exclude filters --exclude loaders 
-
 ## 调用方法
 
 ``` javascript

@@ -54,21 +54,22 @@
 
 /***/ },
 /* 1 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+	exports.SurfaceChart = undefined;
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/17.
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+	var _ChartCanvas = __webpack_require__(2);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Created by grenlight on 16/3/17.
-	 */
 
 	var SurfaceChart = exports.SurfaceChart = function () {
 	    function SurfaceChart(dataArr) {
@@ -77,7 +78,6 @@
 
 	        _classCallCheck(this, SurfaceChart);
 
-	        this.domElement = null;
 	        this.width = width;
 	        this.height = height;
 	        this.paddingLR = 50;
@@ -90,6 +90,10 @@
 	        if (!dataArr || dataArr.length === 0) {
 	            throw new Error('SurfaceChart 需要有效数组做为初始化参数');
 	        }
+
+	        this.canvas = new _ChartCanvas.ChartCanvas(width, height);
+	        this.domElement = this.canvas.renderer.view;
+
 	        this.rowCount = dataArr.length;
 	        this._validateRowAndCol(this.rowCount);
 	        this.colCount = dataArr[0].length;
@@ -235,6 +239,64 @@
 	    }]);
 
 	    return SurfaceChart;
+	}();
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/18.
+	 */
+
+	var ChartCanvas = exports.ChartCanvas = function () {
+	    function ChartCanvas(width, height) {
+	        _classCallCheck(this, ChartCanvas);
+
+	        this.renderer = PIXI.autoDetectRenderer(width, height, {
+	            transparent: true,
+	            interactive: false,
+	            resolution: window.devicePixelRatio
+	        });
+	        this.renderer.view.setAttribute('style', 'margin:0px; -webkit-tap-highlight-color:rgba(0, 0, 0, 0); width:' + width + 'px; height: ' + height + 'px');
+	        this.stage = new PIXI.Container();
+	        this.graphics = new PIXI.Graphics();
+	    }
+
+	    _createClass(ChartCanvas, [{
+	        key: 'drawBubbleView',
+	        value: function drawBubbleView(graphics, color) {
+	            graphics.clear();
+	            graphics.beginFill(color);
+	            graphics.drawRoundedRect(this.frame.x, this.frame.y, this.frame.width, this.frame.height, this.cornerRadius);
+
+	            var anglePointY = void 0,
+	                angleBottomY = void 0;
+	            if (this.isUpDirection) {
+	                anglePointY = this.angleFrame.y;
+	                angleBottomY = this.angleFrame.getMaxY();
+	            } else {
+	                anglePointY = this.angleFrame.getMaxY();
+	                angleBottomY = this.angleFrame.y;
+	            }
+	            graphics.moveTo(this.angleFrame.x, angleBottomY);
+	            graphics.lineTo(this.angleFrame.center.x, anglePointY);
+	            graphics.lineTo(this.angleFrame.getMaxX(), angleBottomY);
+	            graphics.endFill();
+	        }
+	    }]);
+
+	    return ChartCanvas;
 	}();
 
 /***/ }
