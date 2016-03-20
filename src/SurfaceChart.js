@@ -2,8 +2,8 @@
  * Created by grenlight on 16/3/17.
  */
 
-import  { ChartCanvas } from './ChartCanvas.js';
 import { SCDataSource } from './SCDataSource.js';
+import { WebGLRenderer } from './webgl/WebGLRenderer.js';
 
 export class SurfaceChart {
     constructor(dataArr,  width = 600, height = 500) {
@@ -19,9 +19,11 @@ export class SurfaceChart {
         if (!dataArr || dataArr.length === 0) {
             throw new Error('SurfaceChart 需要有效数组做为初始化参数');
         }
-        
-        this.canvas = new ChartCanvas(width, height);
-        this.domElement = this.canvas.renderer.view;
+        this.dataSource = new SCDataSource(dataArr, this.width - this.paddingLR*2, this.height - this.paddingBottom - this.paddingTop);
+
+        this.renderer = new WebGLRenderer(null, this.width, this.height);
+        this.renderer.view.setAttribute('style', 'margin:0px; -webkit-tap-highlight-color:rgba(0, 0, 0, 0); width:' + width + 'px; height: ' + height + 'px');
+        this.domElement = this.renderer.view;
 
     }
 

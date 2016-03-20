@@ -3,7 +3,9 @@
  */
 
 export class  SCDataSource {
-    constructor(dataArr, width = 600, height = 500) {
+    constructor(dataArr, drawWidth , drawHeight ) {
+        this.drawWidth = drawWidth;
+        this.drawHeight = drawHeight;
         this.rowCount = dataArr.length;
         this._validateRowAndCol(this.rowCount);
         this.colCount = dataArr[0].length;
@@ -73,7 +75,7 @@ export class  SCDataSource {
      */
     _generateVertices() {
         this.vertices = [];
-        let colGap = (this.width - this.paddingLR*2)/(this.colCount-1);
+        let colGap = (this.drawWidth)/(this.colCount-1);
         //初始值给负, 避免后面赋值时的条件判断
         let z = -colGap;
         for (let i=0; i<this.rowCount; i++) {
@@ -113,7 +115,7 @@ export class  SCDataSource {
             currentLabel -= gap;
             this.scaleLabels.push(currentLabel);
         }
-        this.dataScale = (this.height - this.paddingBottom - this.paddingTop) /
+        this.dataScale = this.drawHeight /
             (Math.abs(this.scaleLabels[0]-this.scaleLabels[this.scaleLabels.length-1]));
     }
 
