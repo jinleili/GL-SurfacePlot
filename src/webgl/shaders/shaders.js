@@ -18,11 +18,12 @@ void main(void) {
 `;
 
 export let pixelFS = `
-precision highp float;
+precision mediump float;
 
 varying vec3 color;
 
 void main(void) {
-  gl_FragColor = color;
+  gl_FragColor = vec4(color, 0.6);
+  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);
 }
 `;

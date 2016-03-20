@@ -75,6 +75,7 @@ export class  SCDataSource {
      */
     _generateVertices() {
         this.vertices = [];
+        this.colors = [];
         let colGap = (this.drawWidth)/(this.colCount-1);
         //初始值给负, 避免后面赋值时的条件判断
         let z = -colGap;
@@ -86,6 +87,7 @@ export class  SCDataSource {
             for (let j=0; j<this.colCount; j++) {
                 x += colGap;
                 this.vertices.push(x, rowData[j] * this.dataScale, z);
+                this.colors.push(1, 0, 0);
             }
         }
         this._generateIndices();
@@ -100,7 +102,7 @@ export class  SCDataSource {
                 let pre = current -1;
                 let preRow = current - this.colCount;
                 let preRowPre = preRow - 1;
-                this.vertices.push(preRowPre, preRow, pre,  preRow, pre, current);
+                this.indices.push(preRowPre, preRow, pre,  preRow, pre, current);
             }
         }
     }

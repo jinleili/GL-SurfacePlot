@@ -86,8 +86,6 @@
 
 	        _classCallCheck(this, SurfaceChart);
 
-	        this.width = width;
-	        this.height = height;
 	        this.paddingLR = 50;
 	        this.paddingTop = 50;
 	        this.paddingBottom = 50;
@@ -98,16 +96,35 @@
 	        if (!dataArr || dataArr.length === 0) {
 	            throw new Error('SurfaceChart 需要有效数组做为初始化参数');
 	        }
+
+	        this.renderer = new _WebGLRenderer.WebGLRenderer('surfacechart', width, height);
+	        this.renderer.canvas.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
+	        this.renderer.canvas.style.margin = '0px';
+	        this.domElement = this.renderer.canvas;
+	        this.gl = this.renderer.gl;
+
+	        this.width = this.renderer.canvasWidth;
+	        this.height = this.renderer.canvasHeight;
+
 	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.width - this.paddingLR * 2, this.height - this.paddingBottom - this.paddingTop);
 
-	        this.renderer = new _WebGLRenderer.WebGLRenderer(null, this.width, this.height);
-	        this.renderer.view.setAttribute('style', 'margin:0px; -webkit-tap-highlight-color:rgba(0, 0, 0, 0); width:' + width + 'px; height: ' + height + 'px');
-	        this.domElement = this.renderer.view;
-	        //曲面绘制类
-	        this.surface = new _SCSurface.SCSurface(this.dataSource);
+	        this.mvMatrix = _Matrix.Matrix4.identity();
+	        _Matrix.Matrix4.translate(this.mvMatrix, [this.paddingLR, 0, 0]);
+
+	        this.pMatrix = _Matrix.Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
 
 	        this.initProgram();
+
+	        //曲面绘制类
+	        this.surface = new _SCSurface.SCSurface(this.renderer.gl, this.prg, this.dataSource);
+
+	        this.draw();
 	    }
+
+	    /**
+	     *  初始化着色器
+	     */
+
 
 	    _createClass(SurfaceChart, [{
 	        key: 'initProgram',
@@ -118,12 +135,25 @@
 	            } else {
 	                this.prg.setAttribLocations(['vertexPosition', 'vertexColor']);
 	                this.prg.setUniformLocations(['pMatrix', 'mvMatrix']);
-	                this.mvMatrix = _Matrix.Matrix4.identity();
-	                //Matrix4.scale(this.mvMatrix, [this.renderer.canvasWidth, this.renderer.canvasHeight, 1]);
-	                this.pMatrix = _Matrix.Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
+
 	                this.gl.uniformMatrix4fv(this.prg.mvMatrix, false, this.mvMatrix);
 	                this.gl.uniformMatrix4fv(this.prg.pMatrix, false, this.pMatrix);
 	            }
+	        }
+
+	        /**
+	         * 绘制笔触
+	         */
+
+	    }, {
+	        key: 'draw',
+	        value: function draw() {
+	            this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	            this.gl.disable(this.gl.DEPTH_TEST);
+	            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+	            this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
+
+	            this.surface.draw();
 	        }
 	    }]);
 
@@ -231,6 +261,7 @@
 	        key: '_generateVertices',
 	        value: function _generateVertices() {
 	            this.vertices = [];
+	            this.colors = [];
 	            var colGap = this.drawWidth / (this.colCount - 1);
 	            //初始值给负, 避免后面赋值时的条件判断
 	            var z = -colGap;
@@ -242,10 +273,27 @@
 	                for (var j = 0; j < this.colCount; j++) {
 	                    x += colGap;
 	                    this.vertices.push(x, rowData[j] * this.dataScale, z);
+	                    this.colors.push(1, 0, 0);
 	                }
 	            }
-	            console.log(this.vertices);
+	            this._generateIndices();
 	        }
+	    }, {
+	        key: '_generateIndices',
+	        value: function _generateIndices() {
+	            this.indices = [];
+	            for (var i = 1; i < this.rowCount; i++) {
+	                var rowTemp = i * this.colCount;
+	                for (var j = 1; j < this.colCount; j++) {
+	                    var current = rowTemp + j;
+	                    var pre = current - 1;
+	                    var preRow = current - this.colCount;
+	                    var preRowPre = preRow - 1;
+	                    this.indices.push(preRowPre, preRow, pre, preRow, pre, current);
+	                }
+	            }
+	        }
+
 	        /**
 	         * 生成刻度集合
 	         * @private
@@ -311,17 +359,66 @@
 	    value: true
 	});
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	/**
 	 * Created by grenlight on 16/3/20.
 	 */
 
-	var SCSurface = exports.SCSurface = function SCSurface(dataSource) {
-	    _classCallCheck(this, SCSurface);
+	var SCSurface = exports.SCSurface = function () {
+	    function SCSurface(gl, prg, dataSource) {
+	        _classCallCheck(this, SCSurface);
 
-	    this.dataSource = dataSource;
-	};
+	        this.gl = gl;
+	        this.prg = prg;
+	        this.dataSource = dataSource;
+
+	        this.vertices = dataSource.vertices;
+	        this.colorList = dataSource.colors;
+	        this.indices = dataSource.indices;
+
+	        this.vetexBuffer = gl.createArrayBufferWithData(this.vertices);
+	        this.indexBuffer = gl.createElementBufferWithData(this.indices);
+	        this.colorBuffer = gl.createArrayBufferWithData(this.colorList);
+
+	        // this.vertices = [0,0, 0,  50, 0, 0, 50, 50, 0];
+	        // this.indices = [0, 1, 2];
+	        this.updateBufferData();
+	    }
+
+	    _createClass(SCSurface, [{
+	        key: "updateBufferData",
+	        value: function updateBufferData() {
+	            // this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
+	            // this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
+	            //
+	            // this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
+	            // this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colorList), this.gl.STATIC_DRAW);
+
+	            // this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+	            // this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
+	        }
+	    }, {
+	        key: "draw",
+	        value: function draw() {
+	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
+	            //这个地方要写在bind后,相当于获取并设置顶点数据
+	            this.gl.vertexAttribPointer(this.prg.vertexPosition, 3, this.gl.FLOAT, false, 0, 0);
+	            this.gl.enableVertexAttribArray(this.prg.vertexPosition);
+
+	            this.gl.enableVertexAttribArray(this.prg.vertexColor);
+	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
+	            this.gl.vertexAttribPointer(this.prg.vertexColor, 3, this.gl.FLOAT, false, 0, 0);
+
+	            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+	            this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
+	        }
+	    }]);
+
+	    return SCSurface;
+	}();
 
 /***/ },
 /* 4 */
@@ -338,7 +435,7 @@
 
 	var pixelVS = exports.pixelVS = "\nattribute vec3 vertexPosition;\nattribute vec3 vertexColor;\n\nuniform mat4 mvMatrix;\nuniform mat4 pMatrix;\n\nvarying vec3 color;\n\nvoid main(void) {\n  color = vertexColor;\n  gl_Position = pMatrix * mvMatrix * vec4(vertexPosition, 1.0);\n}\n";
 
-	var pixelFS = exports.pixelFS = "\nprecision highp float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = color;\n}\n";
+	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.6);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);\n}\n";
 
 /***/ },
 /* 5 */
@@ -409,14 +506,14 @@
 	                return;
 	            }
 
-	            this.canvas.width = width * window.devicePixelRatio;
-	            this.canvas.height = height * window.devicePixelRatio;
 	            this.canvasWidth = width * window.devicePixelRatio;
 	            this.canvasHeight = height * window.devicePixelRatio;
+	            this.canvas.width = this.canvasWidth;
+	            this.canvas.height = this.canvasHeight;
 
 	            if (otherStyleStr === null) {
-	                this.canvas.style.width = width;
-	                this.canvas.style.height = height;
+	                this.canvas.style.width = width + 'px';
+	                this.canvas.style.height = height + 'px';
 	            } else {
 	                this.canvas.setAttribute('style', 'width:' + width + 'px; height: ' + height + 'px; ' + otherStyleStr);
 	            }

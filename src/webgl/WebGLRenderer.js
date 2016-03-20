@@ -36,14 +36,14 @@ export class WebGLRenderer {
             return;
         }
 
-        this.canvas.width = width * window.devicePixelRatio;
-        this.canvas.height = height * window.devicePixelRatio;
         this.canvasWidth = width * window.devicePixelRatio;
         this.canvasHeight = height * window.devicePixelRatio;
+        this.canvas.width = this.canvasWidth;
+        this.canvas.height = this.canvasHeight ;
 
         if (otherStyleStr === null) {
-            this.canvas.style.width = width;
-            this.canvas.style.height = height;
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height+ 'px';
         } else {
             this.canvas.setAttribute('style', `width:${width}px; height: ${height}px; ${otherStyleStr}`);
         }
