@@ -3,8 +3,10 @@
  */
 
 import { SCDataSource } from './SCDataSource.js';
-import { WebGLRenderer } from './webgl/WebGLRenderer.js';
 import { SCSurface } from './SCSurface.js';
+import { pixelVS, pixelFS } from './webgl/shaders/shaders.js';
+import { WebGLRenderer } from './webgl/WebGLRenderer.js';
+import { Matrix4 } from './webgl/math/Matrix4.js';
 
 export class SurfaceChart {
     constructor(dataArr,  width = 600, height = 500) {
@@ -26,7 +28,39 @@ export class SurfaceChart {
         this.renderer.view.setAttribute('style', 'margin:0px; -webkit-tap-highlight-color:rgba(0, 0, 0, 0); width:' + width + 'px; height: ' + height + 'px');
         this.domElement = this.renderer.view;
         //曲面绘制类
-        this.surface  = new SCSurface(this.dataSource);
+        this.surface  = new SCSurface(this.renderer.gl, this.dataSource);
+
+        this.initProgram();
+    }
+
+    /**
+     *  初始化着色器
+     */
+    initProgram() {
+        this.prg = this.gl.makeProgram(pixelVS, pixelFS);
+        if (this.prg === null) {
+            console.log('着色器加载失败');
+        } else {
+            this.prg.setAttribLocations(['vertexPosition', 'vertexColor']);
+            this.prg.setUniformLocations(['pMatrix', 'mvMatrix']);
+            this.mvMatrix = Matrix4.identity();
+            //Matrix4.scale(this.mvMatrix, [this.renderer.canvasWidth, this.renderer.canvasHeight, 1]);
+            this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
+            this.gl.uniformMatrix4fv(this.prg.mvMatrix, false, this.mvMatrix);
+            this.gl.uniformMatrix4fv(this.prg.pMatrix, false, this.pMatrix);
+        }
+    }
+
+    /**
+     * 绘制笔触
+     */
+    draw() {
+        this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        this.gl.disable(this.gl.DEPTH_TEST);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
+
+        this.surface.draw();
     }
 
 }

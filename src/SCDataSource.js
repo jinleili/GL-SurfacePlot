@@ -88,8 +88,23 @@ export class  SCDataSource {
                 this.vertices.push(x, rowData[j] * this.dataScale, z);
             }
         }
-        console.log(this.vertices);
+        this._generateIndices();
     }
+    
+    _generateIndices() {
+        this.indices = [];
+        for (let i=1; i<this.rowCount; i++) {
+            let rowTemp = i * this.colCount;
+            for (let j=1; j<this.colCount; j++) {
+                let current = rowTemp + j;
+                let pre = current -1;
+                let preRow = current - this.colCount;
+                let preRowPre = preRow - 1;
+                this.vertices.push(preRowPre, preRow, pre,  preRow, pre, current);
+            }
+        }
+    }
+    
     /**
      * 生成刻度集合
      * @private
