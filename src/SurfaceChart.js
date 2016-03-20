@@ -4,6 +4,7 @@
 
 import { SCDataSource } from './SCDataSource.js';
 import { WebGLRenderer } from './webgl/WebGLRenderer.js';
+import { SCSurface } from './SCSurface.js';
 
 export class SurfaceChart {
     constructor(dataArr,  width = 600, height = 500) {
@@ -24,7 +25,8 @@ export class SurfaceChart {
         this.renderer = new WebGLRenderer(null, this.width, this.height);
         this.renderer.view.setAttribute('style', 'margin:0px; -webkit-tap-highlight-color:rgba(0, 0, 0, 0); width:' + width + 'px; height: ' + height + 'px');
         this.domElement = this.renderer.view;
-
+        //曲面绘制类
+        this.surface  = new SCSurface(this.dataSource);
     }
 
 }

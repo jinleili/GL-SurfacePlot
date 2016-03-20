@@ -4,15 +4,15 @@
 
 export let pixelVS = `
 attribute vec3 vertexPosition;
-attribute vec2 vertexTextureCoords;
+attribute vec3 vertexColor;
 
 uniform mat4 mvMatrix;
 uniform mat4 pMatrix;
 
-varying vec2 textureCoord;
+varying vec3 color;
 
 void main(void) {
-  textureCoord = vertexTextureCoords;
+  color = vertexColor;
   gl_Position = pMatrix * mvMatrix * vec4(vertexPosition, 1.0);
 }
 `;
@@ -20,10 +20,9 @@ void main(void) {
 export let pixelFS = `
 precision highp float;
 
-uniform sampler2D texture;
-varying vec2 textureCoord;
+varying vec3 color;
 
 void main(void) {
-  gl_FragColor = texture2D(texture, textureCoord);
+  gl_FragColor = color;
 }
 `;
