@@ -82,7 +82,7 @@ export class  SCDataSource {
         for (let i=0; i<this.rowCount; i++) {
             z += colGap;
 
-            let x = -colGap;
+            let x =-(this.drawWidth/2.0) -colGap;
             let rowData = this.dataSource[i];
             for (let j=0; j<this.colCount; j++) {
                 x += colGap;

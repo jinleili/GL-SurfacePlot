@@ -109,9 +109,16 @@
 	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.width - this.paddingLR * 2, this.height - this.paddingBottom - this.paddingTop);
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
-	        _Matrix.Matrix4.translate(this.mvMatrix, [this.paddingLR, 0, 0]);
+	        // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
+	        // Matrix4.scale(this.mvMatrix, [this.width, this.height, 100]);
 
-	        this.pMatrix = _Matrix.Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
+	        // Matrix4.translate(this.mvMatrix, [this.paddingLR, this.height/2, 0]);
+	        // Matrix4.rotate(this.mvMatrix, this.mvMatrix, 1.0, [0, 1, 0]);
+
+	        // this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
+	        //构建一个与图表坐标系一致的投影矩阵
+	        this.pMatrix = _Matrix.Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
+	        // this.pMatrix = Matrix4.perspective(45, this.width/this.height, 0.01, 5000);
 
 	        this.initProgram();
 
@@ -268,7 +275,7 @@
 	            for (var i = 0; i < this.rowCount; i++) {
 	                z += colGap;
 
-	                var x = -colGap;
+	                var x = -(this.drawWidth / 2.0) - colGap;
 	                var rowData = this.dataSource[i];
 	                for (var j = 0; j < this.colCount; j++) {
 	                    x += colGap;
@@ -378,13 +385,13 @@
 	        this.vertices = dataSource.vertices;
 	        this.colorList = dataSource.colors;
 	        this.indices = dataSource.indices;
-
+	        // this.vertices = [0.0,0.0, 0.2,  50.0, 0.0, 0.2,  50.0, 50.0, 0.2];
+	        // this.indices = [0, 1, 2];
+	        // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];
 	        this.vetexBuffer = gl.createArrayBufferWithData(this.vertices);
 	        this.indexBuffer = gl.createElementBufferWithData(this.indices);
 	        this.colorBuffer = gl.createArrayBufferWithData(this.colorList);
 
-	        // this.vertices = [0,0, 0,  50, 0, 0, 50, 50, 0];
-	        // this.indices = [0, 1, 2];
 	        this.updateBufferData();
 	    }
 
@@ -847,6 +854,90 @@
 	            out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
 	            out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
 
+	            return out;
+	        }
+
+	        /**
+	         * Rotates a mat4 by the given angle around the given axis
+	         *
+	         * @param {mat4} out the receiving matrix
+	         * @param {mat4} a the matrix to rotate
+	         * @param {Number} rad the angle to rotate the matrix by
+	         * @param {array} axis the axis to rotate around
+	         * @returns {mat4} out
+	         */
+
+	    }, {
+	        key: "rotate",
+	        value: function rotate(out, a, rad, axis) {
+	            var x = axis[0],
+	                y = axis[1],
+	                z = axis[2],
+	                len = Math.sqrt(x * x + y * y + z * z),
+	                s,
+	                c,
+	                t,
+	                a00,
+	                a01,
+	                a02,
+	                a03,
+	                a10,
+	                a11,
+	                a12,
+	                a13,
+	                a20,
+	                a21,
+	                a22,
+	                a23,
+	                b00,
+	                b01,
+	                b02,
+	                b10,
+	                b11,
+	                b12,
+	                b20,
+	                b21,
+	                b22;
+
+	            len = 1 / len;
+	            x *= len;
+	            y *= len;
+	            z *= len;
+
+	            s = Math.sin(rad);
+	            c = Math.cos(rad);
+	            t = 1 - c;
+
+	            a00 = a[0];a01 = a[1];a02 = a[2];a03 = a[3];
+	            a10 = a[4];a11 = a[5];a12 = a[6];a13 = a[7];
+	            a20 = a[8];a21 = a[9];a22 = a[10];a23 = a[11];
+
+	            // Construct the elements of the rotation matrix
+	            b00 = x * x * t + c;b01 = y * x * t + z * s;b02 = z * x * t - y * s;
+	            b10 = x * y * t - z * s;b11 = y * y * t + c;b12 = z * y * t + x * s;
+	            b20 = x * z * t + y * s;b21 = y * z * t - x * s;b22 = z * z * t + c;
+
+	            // Perform rotation-specific matrix multiplication
+	            out[0] = a00 * b00 + a10 * b01 + a20 * b02;
+	            out[1] = a01 * b00 + a11 * b01 + a21 * b02;
+	            out[2] = a02 * b00 + a12 * b01 + a22 * b02;
+	            out[3] = a03 * b00 + a13 * b01 + a23 * b02;
+	            out[4] = a00 * b10 + a10 * b11 + a20 * b12;
+	            out[5] = a01 * b10 + a11 * b11 + a21 * b12;
+	            out[6] = a02 * b10 + a12 * b11 + a22 * b12;
+	            out[7] = a03 * b10 + a13 * b11 + a23 * b12;
+	            out[8] = a00 * b20 + a10 * b21 + a20 * b22;
+	            out[9] = a01 * b20 + a11 * b21 + a21 * b22;
+	            out[10] = a02 * b20 + a12 * b21 + a22 * b22;
+	            out[11] = a03 * b20 + a13 * b21 + a23 * b22;
+
+	            if (a !== out) {
+	                // If the source and destination differ, copy the unchanged last row
+	                out[12] = a[12];
+	                out[13] = a[13];
+	                out[14] = a[14];
+	                out[15] = a[15];
+	            }
 	            return out;
 	        }
 	    }]);

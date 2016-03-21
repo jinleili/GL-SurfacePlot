@@ -33,10 +33,16 @@ export class SurfaceChart {
         this.dataSource = new SCDataSource(dataArr, this.width - this.paddingLR*2, this.height - this.paddingBottom - this.paddingTop);
 
         this.mvMatrix = Matrix4.identity();
-        Matrix4.translate(this.mvMatrix, [this.paddingLR, 0, 0]);
+        // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
+        // Matrix4.scale(this.mvMatrix, [this.width, this.height, 100]);
 
-        this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
+        // Matrix4.translate(this.mvMatrix, [this.paddingLR, this.height/2, 0]);
+        // Matrix4.rotate(this.mvMatrix, this.mvMatrix, 1.0, [0, 1, 0]);
 
+        // this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
+        //构建一个与图表坐标系一致的投影矩阵
+        this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
+        // this.pMatrix = Matrix4.perspective(45, this.width/this.height, 0.01, 5000);
 
         this.initProgram();
 

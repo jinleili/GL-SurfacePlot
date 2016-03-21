@@ -8,17 +8,16 @@ export  class SCSurface {
         this.prg = prg;
         this.dataSource = dataSource;
 
-        
         this.vertices = dataSource.vertices;
         this.colorList = dataSource.colors;
         this.indices = dataSource.indices;
-
+        // this.vertices = [0.0,0.0, 0.2,  50.0, 0.0, 0.2,  50.0, 50.0, 0.2];
+        // this.indices = [0, 1, 2];
+        // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];
         this.vetexBuffer = gl.createArrayBufferWithData(this.vertices);
         this.indexBuffer = gl.createElementBufferWithData(this.indices);
         this.colorBuffer = gl.createArrayBufferWithData(this.colorList);
 
-        // this.vertices = [0,0, 0,  50, 0, 0, 50, 50, 0];
-        // this.indices = [0, 1, 2];
         this.updateBufferData();
     }
 
