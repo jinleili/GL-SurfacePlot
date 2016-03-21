@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D 曲面图表 Demo</title>
+</head>
+<body>
+
+<div id="surfaceChart_Container" style="display: block; width:400px; height: 400px;">
+
+</div>
+
+<script type="text/javascript" src="../bin/surfacechart.js"></script>
+<script type="text/javascript">
+   function  request(url, completion) {
+       var xhr = new XMLHttpRequest();
+       xhr.overrideMimeType("text/plain; charset=utf-8");
+        xhr.onreadystatechange = function() {
+            if (this.readyState === this.DONE) {
+                if (this.status === 200 || this.status === 0) {
+                    completion(this.responseText);
+                }
+            }
+        }
+        xhr.open("GET", url, true);
+        xhr.send();
+    };
+   
+//   var dataURL = './data0.txt';
+//   var colCount = 28;
+//
+//   var dataURL = './data1.txt';
+//   var colCount = 20;
+
+   var dataURL = './data2.txt';
+   var colCount = 20;
+
+   request(dataURL, function(dataStr) {
+        //将空白,换行符都替换成逗号,然后分割成数组
+       var newStr = dataStr.replace(/\s/g, ',');
+       var arr = newStr.split(',');
+
+       //将一维数组按行列数分割为二维数组
+       var newArr = [];
+       var rowArr = new Array();
+
+       // 数据集很大时,缓存arr.length这种优化有必要的
+       var arrLength = arr.length;
+       for (var i=0; i<arrLength; i++) {
+           var m = i % colCount;
+           if (i > 0 && m === 0) {
+               newArr.push(rowArr.slice(0));
+               rowArr = new Array();
+           }
+           rowArr.push(arr[i]);
+       }
+       newArr.push(rowArr.slice(0));
+
+       var chartWidth = 600;
+       var chartHeight = 500;
+
+       // 生成图表实例
+       var chart = new SurfaceChart(newArr, chartWidth, chartHeight);
+
+       // 将曲面图显示到网页
+       var container = document.getElementById('surfaceChart_Container');
+       container.appendChild(chart.domElement);
+   });
+</script>
+
+</body>
+</html>
