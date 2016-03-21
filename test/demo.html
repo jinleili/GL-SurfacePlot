@@ -61,19 +61,15 @@
        return newArr;
    }
 
-//   var dataURL = './data0.txt';
-//   var colCount = 28;
-//
-//   var dataURL = './data1.txt';
-//   var colCount = 20;
-
    var dataURL = './data2.txt';
    var colCount = 20;
 
    var container = document.getElementById('surfaceChart_Container');
 
    request('./data0.txt', 28, function(arr) {
-       // 下边 "可选参数" 的意思是指: 如果不想指定这个字段的信息, 就在 params 里删除这个字段
+//   request('./data3.txt', 15665, function(arr) {
+
+           // 下边 "可选参数" 的意思是指: 如果不想指定这个字段的信息, 就在 params 里删除这个字段
        var params = {
            width: 600,  // 必设参数,  图表在屏幕上的宽度
            height: 500, // 必设参数,  一般高度要设置得比宽度小,图表会显得比较漂亮
@@ -87,7 +83,7 @@
        // 将曲面图显示到网页
        container.appendChild(chart.domElement);
 
-       addAnotherChart();
+//       addAnotherChart();
    });
 
    function addAnotherChart() {

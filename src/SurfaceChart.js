@@ -4,6 +4,8 @@
 
 import { SCDataSource } from './SCDataSource.js';
 import { SCSurface } from './SCSurface.js';
+import { SCScale } from './SCScale.js';
+
 import { SCDomElement } from './SCDomElement.js';
 
 import { pixelVS, pixelFS } from './webgl/shaders/shaders.js';
@@ -51,6 +53,8 @@ export class SurfaceChart {
 
         //曲面绘制类
         this.surface  = new SCSurface(this.renderer.gl,  this.prg, this.dataSource);
+        //标尺
+        this.scale = new SCScale(this.renderer.gl, this.prg, this.dataSource);
 
         this.draw();
     }
@@ -79,6 +83,8 @@ export class SurfaceChart {
         this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
+
+        this.scale.draw();
 
         this.surface.draw();
     }

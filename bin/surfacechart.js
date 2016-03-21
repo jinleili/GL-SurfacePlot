@@ -71,13 +71,15 @@
 
 	var _SCSurface = __webpack_require__(4);
 
-	var _SCDomElement = __webpack_require__(5);
+	var _SCScale = __webpack_require__(5);
 
-	var _shaders = __webpack_require__(6);
+	var _SCDomElement = __webpack_require__(6);
 
-	var _WebGLRenderer = __webpack_require__(7);
+	var _shaders = __webpack_require__(7);
 
-	var _Matrix = __webpack_require__(9);
+	var _WebGLRenderer = __webpack_require__(8);
+
+	var _Matrix = __webpack_require__(10);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -124,6 +126,8 @@
 
 	        //曲面绘制类
 	        this.surface = new _SCSurface.SCSurface(this.renderer.gl, this.prg, this.dataSource);
+	        //标尺
+	        this.scale = new _SCScale.SCScale(this.renderer.gl, this.prg, this.dataSource);
 
 	        this.draw();
 	    }
@@ -159,6 +163,8 @@
 	            this.gl.disable(this.gl.DEPTH_TEST);
 	            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 	            this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
+
+	            this.scale.draw();
 
 	            this.surface.draw();
 	        }
@@ -282,26 +288,29 @@
 	        value: function _generateVertices() {
 	            this.vertices = [];
 	            this.colors = [];
-	            var colGap = this.drawWidth / (this.colCount - 1);
+	            this.colGap = this.drawWidth / (this.colCount - 1);
 	            //初始值给正, 避免后面赋值时的条件判断
-	            var z = colGap * this.rowCount / 2 + colGap;
+	            var z = this.colGap * this.rowCount / 2 + this.colGap;
 	            for (var i = 0; i < this.rowCount; i++) {
-	                z -= colGap;
+	                z -= this.colGap;
 
-	                var x = -(this.drawWidth / 2.0) - colGap;
+	                var x = -(this.drawWidth / 2.0) - this.colGap;
 	                var rowData = this.dataSource[i];
 	                for (var j = 0; j < this.colCount; j++) {
-	                    x += colGap;
+	                    x += this.colGap;
 	                    var yValue = rowData[j];
-	                    this.vertices.push(x, (yValue - this.surfaceOffsetY) * this.dataScale, z);
+	                    if (typeof yValue !== 'number') {
+	                        console.log("invalid data: ", i, j, rowData);
+	                    }
+	                    this.vertices.push(x, (yValue - this.scaleCenterY) * this.dataScale, z);
 
 	                    var color = this._calculateVertexColor(yValue);
 	                    this.colors.push(color[0], color[1], color[2]);
 	                }
 	            }
 	            this._generateIndices();
-	            console.log(this.minValue, this.maxValue);
-	            console.log(this.scaleLabels);
+	            // console.log(this.minValue, this.maxValue);
+	            // console.log(this.scaleLabels);
 	        }
 	    }, {
 	        key: '_calculateVertexColor',
@@ -314,6 +323,7 @@
 	                }
 	                pre = current;
 	            }
+	            return this.colorGroup[0];
 	        }
 	    }, {
 	        key: '_generateIndices',
@@ -332,7 +342,7 @@
 	        }
 
 	        /**
-	         * 生成刻度集合 及 应对屏幕中心线的刻度 surfaceOffsetY
+	         * 生成刻度集合 及 应对屏幕中心线的刻度 scaleCenterY
 	         *
 	         * @private
 	         */
@@ -341,15 +351,18 @@
 	        key: '_calculateScaleLabel',
 	        value: function _calculateScaleLabel() {
 	            var distance = Math.abs(this.maxValue - this.minValue);
-	            this.surfaceOffsetY = this.minValue + distance / 2.0;
 	            //为了图形美观,坐标上的刻度值应该做一定的舍入
-	            var gap = distance / (this.referenceLineCount - 1).toFixed(2);
-	            gap = this._calculateGap(gap, 1);
+	            var scaleGap = distance / (this.referenceLineCount - 1).toFixed(2);
+	            scaleGap = this._calculateGap(scaleGap, 1);
+
+	            this.scaleCenterY = this.minValue + distance / 2.0;
+	            //标尺 在 x 轴上的绘制起点
+	            this.scaleStartX = this.colCount / 2 * -scaleGap;
 
 	            var currentLabel = 0;
 	            if (this.maxValue > 0 && this.minValue < 0) {
 	                while (currentLabel < this.maxValue) {
-	                    currentLabel += gap;
+	                    currentLabel += scaleGap;
 	                    this.scaleLabels.unshift(currentLabel);
 	                }
 	                currentLabel = 0;
@@ -358,7 +371,7 @@
 	            }
 	            this.scaleLabels.push(currentLabel);
 	            while (currentLabel > this.minValue) {
-	                currentLabel -= gap;
+	                currentLabel -= scaleGap;
 	                this.scaleLabels.push(currentLabel);
 	            }
 	            this.dataScale = this.drawHeight / Math.abs(this.scaleLabels[0] - this.scaleLabels[this.scaleLabels.length - 1]);
@@ -503,6 +516,92 @@
 
 /***/ },
 /* 5 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/21.
+	 *
+	 * 管理图表上的标尺
+	 */
+
+	var SCScale = exports.SCScale = function () {
+	    function SCScale(gl, prg, dataSource) {
+	        _classCallCheck(this, SCScale);
+
+	        this.gl = gl;
+	        this.prg = prg;
+	        this.dataSource = dataSource;
+	        this.generateScale();
+
+	        this.vetexBuffer = gl.createArrayBufferWithData(this.vertices);
+	        this.indexBuffer = gl.createElementBufferWithData(this.indices);
+	        this.colorBuffer = gl.createArrayBufferWithData(this.colors);
+	    }
+
+	    /**
+	     * 计算标尺的顶点
+	     * 
+	     * 标尺默认的状态是个顺时针旋转了 90 度的 L:
+	     * 一条标尺线由两条直线(四个三角形)组成
+	     */
+
+
+	    _createClass(SCScale, [{
+	        key: 'generateScale',
+	        value: function generateScale() {
+	            this.vertices = [];
+	            this.indices = [];
+	            this.colors = [];
+	            var halfLineWidth = 0.5;
+	            var x = this.dataSource.scaleStartX;
+	            var maxZ = this.dataSource.colGap * this.dataSource.rowCount;
+	            console.log('maxZ:', maxZ);
+	            var offset = 0;
+	            var color = [1.0, 0.0, 0.0];
+	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
+	                var y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
+	                var bottom = [x, y, 0];
+	                var top = [x, y, maxZ];
+	                var topRight = [-x, y, maxZ];
+	                this.vertices.push(bottom[0] - halfLineWidth, bottom[1], bottom[2], bottom[0] + halfLineWidth, bottom[1], bottom[2], top[0] - halfLineWidth, top[1], top[2], top[0] + halfLineWidth, top[1], top[2], top[0] - halfLineWidth, top[1], top[2] - halfLineWidth, top[0] - halfLineWidth, top[1], top[2] + halfLineWidth, topRight[0], topRight[1], topRight[2] - halfLineWidth, topRight[0], topRight[1], topRight[2] + halfLineWidth);
+	                this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
+	                offset = i * 8;
+	                this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 5, offset + 6, offset + 7);
+	            }
+	            console.log('scscale', this.vertices, this.colors);
+	        }
+	    }, {
+	        key: 'draw',
+	        value: function draw() {
+	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
+	            //这个地方要写在bind后,相当于获取并设置顶点数据
+	            this.gl.vertexAttribPointer(this.prg.vertexPosition, 3, this.gl.FLOAT, false, 0, 0);
+	            this.gl.enableVertexAttribArray(this.prg.vertexPosition);
+
+	            this.gl.enableVertexAttribArray(this.prg.vertexColor);
+	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
+	            this.gl.vertexAttribPointer(this.prg.vertexColor, 3, this.gl.FLOAT, false, 0, 0);
+
+	            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+	            this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
+	        }
+	    }]);
+
+	    return SCScale;
+	}();
+
+/***/ },
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -564,7 +663,7 @@
 	}();
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -581,7 +680,7 @@
 	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.6);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);\n}\n";
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -596,7 +695,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _GLUtils = __webpack_require__(8);
+	var _GLUtils = __webpack_require__(9);
 
 	var GLUtils = _interopRequireWildcard(_GLUtils);
 
@@ -684,7 +783,7 @@
 	}();
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -803,7 +902,7 @@
 	}
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	"use strict";

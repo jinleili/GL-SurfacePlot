@@ -33,7 +33,6 @@ export  class SCSurface {
         // this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
     }
 
-
     draw() {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
         //这个地方要写在bind后,相当于获取并设置顶点数据

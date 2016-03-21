@@ -86,26 +86,29 @@ export class  SCDataSource {
     _generateVertices() {
         this.vertices = [];
         this.colors = [];
-        let colGap = (this.drawWidth)/(this.colCount-1);
+        this.colGap  = (this.drawWidth)/(this.colCount-1);
         //初始值给正, 避免后面赋值时的条件判断
-        let z = colGap*this.rowCount / 2 + colGap;
+        let z = this.colGap*this.rowCount / 2 + this.colGap;
         for (let i=0; i<this.rowCount; i++) {
-            z -= colGap;
+            z -= this.colGap;
 
-            let x =-(this.drawWidth/2.0) -colGap;
+            let x =-(this.drawWidth/2.0) -this.colGap;
             let rowData = this.dataSource[i];
             for (let j=0; j<this.colCount; j++) {
-                x += colGap;
+                x += this.colGap;
                 let yValue = rowData[j] ;
-                this.vertices.push(x, (yValue - this.surfaceOffsetY) * this.dataScale, z);
+                if (typeof(yValue) !== 'number') {
+                    console.log("invalid data: ", i, j, rowData);
+                }
+                this.vertices.push(x, (yValue - this.scaleCenterY) * this.dataScale, z);
 
                 let color = this._calculateVertexColor(yValue)
                 this.colors.push(color[0], color[1], color[2]);
             }
         }
         this._generateIndices();
-        console.log(this.minValue, this.maxValue);
-        console.log(this.scaleLabels);
+        // console.log(this.minValue, this.maxValue);
+        // console.log(this.scaleLabels);
     }
 
     _calculateVertexColor(yValue) {
@@ -117,6 +120,7 @@ export class  SCDataSource {
             }
             pre = current;
         }
+        return this.colorGroup[0];
     }
     
     _generateIndices() {
@@ -134,21 +138,24 @@ export class  SCDataSource {
     }
     
     /**
-     * 生成刻度集合 及 应对屏幕中心线的刻度 surfaceOffsetY
+     * 生成刻度集合 及 应对屏幕中心线的刻度 scaleCenterY
      *
      * @private
      */
     _calculateScaleLabel() {
         let distance = Math.abs(this.maxValue - this.minValue) ;
-        this.surfaceOffsetY = this.minValue + distance/2.0;
         //为了图形美观,坐标上的刻度值应该做一定的舍入
-        let gap = distance /(this.referenceLineCount - 1).toFixed(2);
-        gap = this._calculateGap(gap, 1);
+        let scaleGap = distance /(this.referenceLineCount - 1).toFixed(2);
+        scaleGap = this._calculateGap(scaleGap, 1);
+
+        this.scaleCenterY = this.minValue + distance/2.0;
+        //标尺 在 x 轴上的绘制起点
+        this.scaleStartX = this.colCount/2 * (-scaleGap);
 
         let currentLabel = 0;
         if (this.maxValue > 0 && this.minValue < 0) {
             while  (currentLabel < this.maxValue) {
-                currentLabel += gap;
+                currentLabel += scaleGap;
                 this.scaleLabels.unshift(currentLabel);
             }
             currentLabel = 0;
@@ -157,7 +164,7 @@ export class  SCDataSource {
         }
         this.scaleLabels.push(currentLabel);
         while  (currentLabel > this.minValue) {
-            currentLabel -= gap;
+            currentLabel -= scaleGap;
             this.scaleLabels.push(currentLabel);
         }
         this.dataScale = this.drawHeight /
