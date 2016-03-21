@@ -11,6 +11,7 @@ export  class SCSurface {
         this.vertices = dataSource.vertices;
         this.colorList = dataSource.colors;
         this.indices = dataSource.indices;
+        // console.log(this.vertices, this.colorList, this.indices);
         // this.vertices = [0.0,0.0, 0.2,  50.0, 0.0, 0.2,  50.0, 50.0, 0.2];
         // this.indices = [0, 1, 2];
         // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];

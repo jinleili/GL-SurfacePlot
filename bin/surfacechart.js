@@ -156,7 +156,7 @@
 	    }, {
 	        key: 'draw',
 	        value: function draw() {
-	            this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	            this.gl.clearColor(0.25, 0.25, 0.25, 1.0);
 	            this.gl.disable(this.gl.DEPTH_TEST);
 	            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 	            this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
@@ -293,14 +293,16 @@
 	                var rowData = this.dataSource[i];
 	                for (var j = 0; j < this.colCount; j++) {
 	                    x += colGap;
-	                    var yValue = rowData[j] * this.dataScale;
-	                    this.vertices.push(x, yValue, z);
+	                    var yValue = rowData[j];
+	                    this.vertices.push(x, (yValue - this.surfaceOffsetY) * this.dataScale, z);
 
 	                    var color = this._calculateVertexColor(yValue);
 	                    this.colors.push(color[0], color[1], color[2]);
 	                }
 	            }
 	            this._generateIndices();
+	            console.log(this.minValue, this.maxValue);
+	            console.log(this.scaleLabels);
 	        }
 	    }, {
 	        key: '_calculateVertexColor',
@@ -331,7 +333,8 @@
 	        }
 
 	        /**
-	         * 生成刻度集合
+	         * 生成刻度集合 及 应对屏幕中心线的刻度 surfaceOffsetY
+	         *
 	         * @private
 	         */
 
@@ -339,6 +342,8 @@
 	        key: '_calculateScaleLabel',
 	        value: function _calculateScaleLabel() {
 	            var distance = Math.abs(this.maxValue - this.minValue);
+	            this.surfaceOffsetY = this.minValue + distance / 2.0;
+	            console.log("surfaceOffsetY: ", this.surfaceOffsetY);
 	            //为了图形美观,坐标上的刻度值应该做一定的舍入
 	            var gap = distance / (this.referenceLineCount - 1).toFixed(2);
 	            gap = this._calculateGap(gap, 1);
@@ -455,6 +460,7 @@
 	        this.vertices = dataSource.vertices;
 	        this.colorList = dataSource.colors;
 	        this.indices = dataSource.indices;
+	        console.log(this.vertices, this.colorList, this.indices);
 	        // this.vertices = [0.0,0.0, 0.2,  50.0, 0.0, 0.2,  50.0, 50.0, 0.2];
 	        // this.indices = [0, 1, 2];
 	        // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];

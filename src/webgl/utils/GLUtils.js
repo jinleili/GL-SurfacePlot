@@ -43,7 +43,7 @@ export function createArrayBufferWithData(vertices) {
   this.bindBuffer(this.ARRAY_BUFFER, vetexBuffer);
   this.bufferData(this.ARRAY_BUFFER, new Float32Array(vertices), this.STATIC_DRAW);
     //this.bufferData(this.ARRAY_BUFFER, new Float32Array(vertices), this.DYNAMIC_DRAW);
-    this.bindBuffer(this.ARRAY_BUFFER, null);
+  this.bindBuffer(this.ARRAY_BUFFER, null);
 
   return vetexBuffer;
 }

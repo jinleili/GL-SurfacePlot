@@ -73,7 +73,7 @@ export class SurfaceChart {
      * 绘制笔触
      */
     draw() {
-        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        this.gl.clearColor(0.25, 0.25, 0.25, 1.0);
         this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);

@@ -96,14 +96,16 @@ export class  SCDataSource {
             let rowData = this.dataSource[i];
             for (let j=0; j<this.colCount; j++) {
                 x += colGap;
-                let yValue = rowData[j] * this.dataScale;
-                this.vertices.push(x, yValue, z);
+                let yValue = rowData[j] ;
+                this.vertices.push(x, (yValue - this.surfaceOffsetY) * this.dataScale, z);
 
                 let color = this._calculateVertexColor(yValue)
                 this.colors.push(color[0], color[1], color[2]);
             }
         }
         this._generateIndices();
+        console.log(this.minValue, this.maxValue);
+        console.log(this.scaleLabels);
     }
 
     _calculateVertexColor(yValue) {
@@ -132,11 +134,13 @@ export class  SCDataSource {
     }
     
     /**
-     * 生成刻度集合
+     * 生成刻度集合 及 应对屏幕中心线的刻度 surfaceOffsetY
+     *
      * @private
      */
     _calculateScaleLabel() {
         let distance = Math.abs(this.maxValue - this.minValue) ;
+        this.surfaceOffsetY = this.minValue + distance/2.0;
         //为了图形美观,坐标上的刻度值应该做一定的舍入
         let gap = distance /(this.referenceLineCount - 1).toFixed(2);
         gap = this._calculateGap(gap, 1);
