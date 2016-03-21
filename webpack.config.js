@@ -18,8 +18,22 @@ module.exports = [
                 loader: 'babel-loader'
             }]
         }
-        //plugins: [
-        //    new webpack.optimize.UglifyJsPlugin(),
-        //]
+    },
+    {
+        entry: entryFile,
+        output: {
+            path: outPath,
+            filename: 'surfacechart.min.js'
+        },
+        module: {
+            loaders: [{
+                test: [srcPath],
+                exclude: /(node_modules)/,
+                loader: 'babel-loader'
+            }]
+        },
+        plugins: [
+           new webpack.optimize.UglifyJsPlugin()
+        ]
     }
 ];

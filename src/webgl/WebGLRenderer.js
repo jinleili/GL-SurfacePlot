@@ -15,7 +15,7 @@ export class WebGLRenderer {
 
         if (this.canvas === null) {
             this.canvas = document.createElement('canvas');
-            this.canvas.setAttribute('id', elementId);
+            // this.canvas.setAttribute('id', elementId);
             document.body.appendChild(this.canvas);
         }
         this.gl = this.getGLContext();
@@ -45,8 +45,10 @@ export class WebGLRenderer {
             this.canvas.style.width = width + 'px';
             this.canvas.style.height = height+ 'px';
         } else {
-            this.canvas.setAttribute('style', `width:${width}px; height: ${height}px; ${otherStyleStr}`);
+            this.canvas.setAttribute('style', `width:${width}px; height: ${height}px; ${otherStyleStr};`);
         }
+        this.canvas.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
+
         this.centerX = this.canvasWidth / 2.0;
         this.centerY = this.canvasHeight / 2.0;
     }

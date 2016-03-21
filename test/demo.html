@@ -3,22 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <title>3D 曲面图表 Demo</title>
+    <style>
+        #root {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translate(-50%, 0);
+            color: #353535;
+        }
+    </style>
 </head>
 <body>
+<div id="root">
+    <h3> 3D 曲面图表 Demo </h3>
+    <div id="surfaceChart_Container" style="display: block; width:600px; height: 500px;">
 
-<div id="surfaceChart_Container" style="display: block; width:400px; height: 400px;">
-
+    </div>
 </div>
 
 <script type="text/javascript" src="../bin/surfacechart.js"></script>
 <script type="text/javascript">
-   function  request(url, completion) {
+   function  request(url, colCount, completion) {
        var xhr = new XMLHttpRequest();
        xhr.overrideMimeType("text/plain; charset=utf-8");
         xhr.onreadystatechange = function() {
             if (this.readyState === this.DONE) {
                 if (this.status === 200 || this.status === 0) {
-                    completion(this.responseText);
+                    var arr = parseResponseText(this.responseText, colCount);
+                    completion(arr);
                 }
             }
         }
@@ -26,17 +38,8 @@
         xhr.send();
     };
 
-//   var dataURL = './data0.txt';
-//   var colCount = 28;
-//
-//   var dataURL = './data1.txt';
-//   var colCount = 20;
-
-   var dataURL = './data2.txt';
-   var colCount = 20;
-
-   request(dataURL, function(dataStr) {
-        //将空白,换行符都替换成逗号,然后分割成数组
+   function parseResponseText(dataStr, colCount) {
+       //将空白,换行符都替换成逗号,然后分割成数组
        var newStr = dataStr.replace(/\s/g, ',');
        var arr = newStr.split(',');
 
@@ -55,26 +58,52 @@
            rowArr.push(arr[i]);
        }
        newArr.push(rowArr.slice(0));
+       return newArr;
+   }
 
-       var chartWidth = 600;
-       var chartHeight = 500;
+//   var dataURL = './data0.txt';
+//   var colCount = 28;
+//
+//   var dataURL = './data1.txt';
+//   var colCount = 20;
 
+   var dataURL = './data2.txt';
+   var colCount = 20;
+
+   var container = document.getElementById('surfaceChart_Container');
+
+   request('./data0.txt', 28, function(arr) {
        // 下边 "可选参数" 的意思是指: 如果不想指定这个字段的信息, 就在 params 里删除这个字段
        var params = {
            width: 600,  // 必设参数,  图表在屏幕上的宽度
            height: 500, // 必设参数,  一般高度要设置得比宽度小,图表会显得比较漂亮
            title: '3D 曲面图表 - 0', // 可选参数, 图表的名称, 默认为空
-           fontColor: 0xfafafa, // 可选参数, 图表上文字的颜色, 默认为0xfafafa
-           backgroundColor: 0x353535, // 可选参数, 图表背景颜色, 默认为 0x353535
-           surfaceColors:  [0x215c91,  0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9] // 可选参数, 曲面顶点颜色,如果要指定, 数组长度至少为 7 位.
+           fontColor: '#fafafa', // 可选参数, 图表上文字的颜色, 默认为0xfafafa
+           backgroundColor: '#353535', // 可选参数, 图表背景颜色, 默认为 0x353535
+           surfaceColors:  ['0x215c91',  '0x70af48', '0x3769bd', '0xfec536', '0xa5a5a5', '0xf27934', '0x6aa3d9'] // 可选参数, 曲面顶点颜色,如果要指定, 数组长度至少为 7 位.
        };
        // 生成图表实例
-       var chart = new SurfaceChart(newArr, params);
-
+       var chart = new SurfaceChart(arr, params);
        // 将曲面图显示到网页
-       var container = document.getElementById('surfaceChart_Container');
        container.appendChild(chart.domElement);
+
+       addAnotherChart();
    });
+
+   function addAnotherChart() {
+       request('./data1.txt', 20, function(arr) {
+           var params = {
+               width: 600,
+               height: 500,
+               title: '3D 曲面图表 - 1',
+               fontColor: '#353535',
+               backgroundColor: '#efefef',
+               surfaceColors:  ['#9fbadb',  '#7ca5d3', '#5296d3', '#4180b7', '#4179ab', '#215c91', '#3769bd']
+           };
+           var chart = new SurfaceChart(arr, params);
+           container.appendChild(chart.domElement);
+       });
+   }
 </script>
 
 </body>

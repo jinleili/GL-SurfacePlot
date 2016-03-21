@@ -71,40 +71,39 @@
 
 	var _SCSurface = __webpack_require__(4);
 
-	var _shaders = __webpack_require__(5);
+	var _SCDomElement = __webpack_require__(5);
 
-	var _WebGLRenderer = __webpack_require__(6);
+	var _shaders = __webpack_require__(6);
 
-	var _Matrix = __webpack_require__(8);
+	var _WebGLRenderer = __webpack_require__(7);
+
+	var _Matrix = __webpack_require__(9);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var SurfaceChart = exports.SurfaceChart = function () {
-	    function SurfaceChart(dataArr) {
-	        var width = arguments.length <= 1 || arguments[1] === undefined ? 600 : arguments[1];
-	        var height = arguments.length <= 2 || arguments[2] === undefined ? 500 : arguments[2];
-
+	    function SurfaceChart(dataArr, params) {
 	        _classCallCheck(this, SurfaceChart);
 
 	        this.paddingLR = 50;
 	        this.paddingTop = 50;
 	        this.paddingBottom = 50;
 
-	        if (width < 300 || height < 200) {
+	        if (params.width < 300 || params.height < 200) {
 	            throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
 	        }
 	        if (!dataArr || dataArr.length === 0) {
 	            throw new Error('SurfaceChart 需要有效数组做为初始化参数');
 	        }
 
-	        this.renderer = new _WebGLRenderer.WebGLRenderer('surfacechart', width, height);
-	        this.renderer.canvas.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
-	        this.renderer.canvas.style.margin = '0px';
-	        this.domElement = this.renderer.canvas;
+	        this.renderer = new _WebGLRenderer.WebGLRenderer();
+	        this.renderer.setStyle(params.width, params.height, 'margin:0px; position:absolute; z-index:10');
 	        this.gl = this.renderer.gl;
-
 	        this.width = this.renderer.canvasWidth;
 	        this.height = this.renderer.canvasHeight;
+
+	        this.domElement = new _SCDomElement.SCDomElement(params).panel;
+	        this.domElement.appendChild(this.renderer.canvas);
 
 	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.width - this.paddingLR * 2, this.height - this.paddingBottom - this.paddingTop);
 
@@ -156,7 +155,7 @@
 	    }, {
 	        key: 'draw',
 	        value: function draw() {
-	            this.gl.clearColor(0.25, 0.25, 0.25, 1.0);
+	            this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	            this.gl.disable(this.gl.DEPTH_TEST);
 	            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 	            this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
@@ -343,7 +342,6 @@
 	        value: function _calculateScaleLabel() {
 	            var distance = Math.abs(this.maxValue - this.minValue);
 	            this.surfaceOffsetY = this.minValue + distance / 2.0;
-	            console.log("surfaceOffsetY: ", this.surfaceOffsetY);
 	            //为了图形美观,坐标上的刻度值应该做一定的舍入
 	            var gap = distance / (this.referenceLineCount - 1).toFixed(2);
 	            gap = this._calculateGap(gap, 1);
@@ -460,7 +458,7 @@
 	        this.vertices = dataSource.vertices;
 	        this.colorList = dataSource.colors;
 	        this.indices = dataSource.indices;
-	        console.log(this.vertices, this.colorList, this.indices);
+	        // console.log(this.vertices, this.colorList, this.indices);
 	        // this.vertices = [0.0,0.0, 0.2,  50.0, 0.0, 0.2,  50.0, 50.0, 0.2];
 	        // this.indices = [0, 1, 2];
 	        // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];
@@ -505,6 +503,68 @@
 
 /***/ },
 /* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.SCDomElement = undefined;
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/21.
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+	var _Color = __webpack_require__(3);
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var SCDomElement = exports.SCDomElement = function () {
+	    function SCDomElement(params) {
+	        _classCallCheck(this, SCDomElement);
+
+	        this.width = params.width;
+	        this.height = params.height;
+	        this.title = params.title;
+	        this.fontColor = params.fontColor ? params.fontColor : 0xfafafa;
+	        this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
+
+	        this.panel = this.createPanel();
+
+	        if (this.title) {
+	            this.createTitle();
+	        }
+	    }
+
+	    _createClass(SCDomElement, [{
+	        key: 'createPanel',
+	        value: function createPanel() {
+	            var style = 'position:relative;display:block; padding:0px; margin: 0px;  -webkit-tap-highlight-color:rgba(0, 0, 0, 0); -webkit-user-select: none; user-select: none; width:' + this.width + 'px; ' + 'height:' + this.height + 'px; color: ' + this.fontColor + '; background-color:' + this.backgroundColor;
+	            return this.createElement('div', style);
+	        }
+	    }, {
+	        key: 'createTitle',
+	        value: function createTitle() {
+	            var style = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + this.width + 'px; ' + 'height:30px; text-align: center; z-index: 0';
+	            var titleElement = this.createElement('h3', style);
+	            titleElement.innerHTML = this.title;
+	            this.panel.appendChild(titleElement);
+	        }
+	    }, {
+	        key: 'createElement',
+	        value: function createElement(elementType, styleStr) {
+	            var ele = document.createElement(elementType);
+	            ele.setAttribute('style', styleStr);
+	            return ele;
+	        }
+	    }]);
+
+	    return SCDomElement;
+	}();
+
+/***/ },
+/* 6 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -521,7 +581,7 @@
 	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.6);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);\n}\n";
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -536,7 +596,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _GLUtils = __webpack_require__(7);
+	var _GLUtils = __webpack_require__(8);
 
 	var GLUtils = _interopRequireWildcard(_GLUtils);
 
@@ -562,7 +622,7 @@
 
 	        if (this.canvas === null) {
 	            this.canvas = document.createElement('canvas');
-	            this.canvas.setAttribute('id', elementId);
+	            // this.canvas.setAttribute('id', elementId);
 	            document.body.appendChild(this.canvas);
 	        }
 	        this.gl = this.getGLContext();
@@ -598,8 +658,10 @@
 	                this.canvas.style.width = width + 'px';
 	                this.canvas.style.height = height + 'px';
 	            } else {
-	                this.canvas.setAttribute('style', 'width:' + width + 'px; height: ' + height + 'px; ' + otherStyleStr);
+	                this.canvas.setAttribute('style', 'width:' + width + 'px; height: ' + height + 'px; ' + otherStyleStr + ';');
 	            }
+	            this.canvas.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
+
 	            this.centerX = this.canvasWidth / 2.0;
 	            this.centerY = this.canvasHeight / 2.0;
 	        }
@@ -622,7 +684,7 @@
 	}();
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -741,7 +803,7 @@
 	}
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	"use strict";
