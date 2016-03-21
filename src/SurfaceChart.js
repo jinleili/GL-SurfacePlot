@@ -34,10 +34,11 @@ export class SurfaceChart {
 
         this.mvMatrix = Matrix4.identity();
         // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
-        // Matrix4.scale(this.mvMatrix, [this.width, this.height, 100]);
+        Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
 
         // Matrix4.translate(this.mvMatrix, [this.paddingLR, this.height/2, 0]);
-        // Matrix4.rotate(this.mvMatrix, this.mvMatrix, 1.0, [0, 1, 0]);
+        Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.3, [1, 0, 0]);
+        Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.75, [0, 1, 0]);
 
         // this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
         //构建一个与图表坐标系一致的投影矩阵

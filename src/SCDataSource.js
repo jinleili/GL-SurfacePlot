@@ -1,9 +1,12 @@
 /**
  * Created by grenlight on 16/3/19.
  */
+import {Color} from './webgl/utils/Color.js';
 
 export class  SCDataSource {
     constructor(dataArr, drawWidth , drawHeight ) {
+        let colors = [0x215c91,  0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
+        this.colorGroup = this._colors(colors);
         this.drawWidth = drawWidth;
         this.drawHeight = drawHeight;
         this.rowCount = dataArr.length;
@@ -24,6 +27,14 @@ export class  SCDataSource {
         this._formatData(dataArr);
     }
 
+    _colors(colors) {
+        let arr = [];
+        for (let i=0; i<colors.length; i++) {
+            arr.push(Color.hex2rgb(colors[i]));
+        }
+        return arr;
+    }
+
     _validateRowAndCol(count) {
         if (count < 2) {
             throw new Error('SurfaceChart 至少需要两行两列数据 ');
@@ -35,7 +46,6 @@ export class  SCDataSource {
             throw new Error('SurfaceChart 需要的数据项必须是整数或浮点数');
         }
     }
-
 
     /**
      * 格式化数据
@@ -77,20 +87,34 @@ export class  SCDataSource {
         this.vertices = [];
         this.colors = [];
         let colGap = (this.drawWidth)/(this.colCount-1);
-        //初始值给负, 避免后面赋值时的条件判断
-        let z = -colGap;
+        //初始值给正, 避免后面赋值时的条件判断
+        let z = colGap*this.rowCount / 2 + colGap;
         for (let i=0; i<this.rowCount; i++) {
-            z += colGap;
+            z -= colGap;
 
             let x =-(this.drawWidth/2.0) -colGap;
             let rowData = this.dataSource[i];
             for (let j=0; j<this.colCount; j++) {
                 x += colGap;
-                this.vertices.push(x, rowData[j] * this.dataScale, z);
-                this.colors.push(1, 0, 0);
+                let yValue = rowData[j] * this.dataScale;
+                this.vertices.push(x, yValue, z);
+
+                let color = this._calculateVertexColor(yValue)
+                this.colors.push(color[0], color[1], color[2]);
             }
         }
         this._generateIndices();
+    }
+
+    _calculateVertexColor(yValue) {
+        let pre = this.scaleLabels[0];
+        for (let k=1; k<this.scaleLabels.length; k++) {
+            let current = this.scaleLabels[k];
+            if (yValue <= pre && yValue >=current) {
+                return this.colorGroup[k-1];
+            }
+            pre = current;
+        }
     }
     
     _generateIndices() {

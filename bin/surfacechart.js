@@ -69,13 +69,13 @@
 
 	var _SCDataSource = __webpack_require__(2);
 
-	var _SCSurface = __webpack_require__(3);
+	var _SCSurface = __webpack_require__(4);
 
-	var _shaders = __webpack_require__(4);
+	var _shaders = __webpack_require__(5);
 
-	var _WebGLRenderer = __webpack_require__(5);
+	var _WebGLRenderer = __webpack_require__(6);
 
-	var _Matrix = __webpack_require__(7);
+	var _Matrix = __webpack_require__(8);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -110,10 +110,11 @@
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
 	        // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
-	        // Matrix4.scale(this.mvMatrix, [this.width, this.height, 100]);
+	        _Matrix.Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
 
 	        // Matrix4.translate(this.mvMatrix, [this.paddingLR, this.height/2, 0]);
-	        // Matrix4.rotate(this.mvMatrix, this.mvMatrix, 1.0, [0, 1, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.3, [1, 0, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.75, [0, 1, 0]);
 
 	        // this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
 	        //构建一个与图表坐标系一致的投影矩阵
@@ -169,26 +170,30 @@
 
 /***/ },
 /* 2 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+	exports.SCDataSource = undefined;
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/19.
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+
+	var _Color = __webpack_require__(3);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Created by grenlight on 16/3/19.
-	 */
 
 	var SCDataSource = exports.SCDataSource = function () {
 	    function SCDataSource(dataArr, drawWidth, drawHeight) {
 	        _classCallCheck(this, SCDataSource);
 
+	        var colors = [0x215c91, 0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
+	        this.colorGroup = this._colors(colors);
 	        this.drawWidth = drawWidth;
 	        this.drawHeight = drawHeight;
 	        this.rowCount = dataArr.length;
@@ -210,6 +215,15 @@
 	    }
 
 	    _createClass(SCDataSource, [{
+	        key: '_colors',
+	        value: function _colors(colors) {
+	            var arr = [];
+	            for (var i = 0; i < colors.length; i++) {
+	                arr.push(_Color.Color.hex2rgb(colors[i]));
+	            }
+	            return arr;
+	        }
+	    }, {
 	        key: '_validateRowAndCol',
 	        value: function _validateRowAndCol(count) {
 	            if (count < 2) {
@@ -270,20 +284,35 @@
 	            this.vertices = [];
 	            this.colors = [];
 	            var colGap = this.drawWidth / (this.colCount - 1);
-	            //初始值给负, 避免后面赋值时的条件判断
-	            var z = -colGap;
+	            //初始值给正, 避免后面赋值时的条件判断
+	            var z = colGap * this.rowCount / 2 + colGap;
 	            for (var i = 0; i < this.rowCount; i++) {
-	                z += colGap;
+	                z -= colGap;
 
 	                var x = -(this.drawWidth / 2.0) - colGap;
 	                var rowData = this.dataSource[i];
 	                for (var j = 0; j < this.colCount; j++) {
 	                    x += colGap;
-	                    this.vertices.push(x, rowData[j] * this.dataScale, z);
-	                    this.colors.push(1, 0, 0);
+	                    var yValue = rowData[j] * this.dataScale;
+	                    this.vertices.push(x, yValue, z);
+
+	                    var color = this._calculateVertexColor(yValue);
+	                    this.colors.push(color[0], color[1], color[2]);
 	                }
 	            }
 	            this._generateIndices();
+	        }
+	    }, {
+	        key: '_calculateVertexColor',
+	        value: function _calculateVertexColor(yValue) {
+	            var pre = this.scaleLabels[0];
+	            for (var k = 1; k < this.scaleLabels.length; k++) {
+	                var current = this.scaleLabels[k];
+	                if (yValue <= pre && yValue >= current) {
+	                    return this.colorGroup[k - 1];
+	                }
+	                pre = current;
+	            }
 	        }
 	    }, {
 	        key: '_generateIndices',
@@ -360,6 +389,47 @@
 /* 3 */
 /***/ function(module, exports) {
 
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/18.
+	 */
+
+	var Color = exports.Color = function () {
+	  function Color() {
+	    _classCallCheck(this, Color);
+	  }
+
+	  _createClass(Color, null, [{
+	    key: 'hex2rgb',
+	    value: function hex2rgb(hex) {
+	      if (typeof hex === 'string' && hex.substr(0, 1) === '#') {
+	        hex = '0x' + hex.substr(1, hex.length - 1);
+	      }
+	      var out = [];
+	      out[0] = (hex >> 16 & 0xFF) / 255;
+	      out[1] = (hex >> 8 & 0xFF) / 255;
+	      out[2] = (hex & 0xFF) / 255;
+
+	      return out;
+	    }
+	  }]);
+
+	  return Color;
+	}();
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
@@ -428,7 +498,7 @@
 	}();
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -445,7 +515,7 @@
 	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.6);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);\n}\n";
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -460,7 +530,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _GLUtils = __webpack_require__(6);
+	var _GLUtils = __webpack_require__(7);
 
 	var GLUtils = _interopRequireWildcard(_GLUtils);
 
@@ -546,7 +616,7 @@
 	}();
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -665,7 +735,7 @@
 	}
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	"use strict";

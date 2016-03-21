@@ -1,10 +1,10 @@
 /**
  * Created by grenlight on 16/3/18.
  */
-  
+
 export class Color {
   static hex2rgb(hex) {
-    if (hex.substr(0, 1) === '#') {
+    if ( typeof(hex) === 'string' && hex.substr(0, 1) === '#') {
       hex = '0x' + hex.substr(1, hex.length - 1);
     }
     let out = [];
