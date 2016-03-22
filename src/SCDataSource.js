@@ -134,7 +134,7 @@ export class  SCDataSource {
                 let pre = current -1;
                 let preRow = current - this.colCount;
                 let preRowPre = preRow - 1;
-                this.indices.push(preRowPre, preRow, pre,  preRow, pre, current);
+                this.indices.push(preRowPre, preRow, pre,  preRow, current, pre);
             }
         }
     }

@@ -26,7 +26,7 @@ export class SCScale {
         this.vertices = [];
         this.indices = [];
         this.colors = [];
-        let halfLineWidth = 1.0;
+        let halfLineWidth = 0.5;
         let x = this.dataSource.scaleStartX;
         let maxZ = this.dataSource.colGap * (-this.dataSource.rowCount/2);
         let offset = 0;

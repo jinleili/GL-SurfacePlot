@@ -34,10 +34,10 @@ export  class SCSurface {
     }
 
     draw() {
+        this.gl.enableVertexAttribArray(this.prg.vertexPosition);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
         //这个地方要写在bind后,相当于获取并设置顶点数据
         this.gl.vertexAttribPointer(this.prg.vertexPosition, 3, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(this.prg.vertexPosition);
 
         this.gl.enableVertexAttribArray(this.prg.vertexColor);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);

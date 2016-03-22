@@ -101,6 +101,7 @@
 	        this.renderer = new _WebGLRenderer.WebGLRenderer();
 	        this.renderer.setStyle(params.width, params.height, 'margin:0px; position:absolute; z-index:10');
 	        this.gl = this.renderer.gl;
+
 	        this.style.canvasHeight = this.renderer.canvasHeight;
 	        this.style.canvasWidth = this.renderer.canvasWidth;
 
@@ -159,13 +160,12 @@
 	    }, {
 	        key: 'draw',
 	        value: function draw() {
-	            this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
-	            this.gl.disable(this.gl.DEPTH_TEST);
-	            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 	            this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
+	            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+	            this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
+	            this.gl.enable(this.gl.BLEND);
 	            this.scale.draw();
-
 	            this.surface.draw();
 	        }
 	    }]);
@@ -338,7 +338,7 @@
 	                    var pre = current - 1;
 	                    var preRow = current - this.colCount;
 	                    var preRowPre = preRow - 1;
-	                    this.indices.push(preRowPre, preRow, pre, preRow, pre, current);
+	                    this.indices.push(preRowPre, preRow, pre, preRow, current, pre);
 	                }
 	            }
 	        }
@@ -499,10 +499,10 @@
 	    }, {
 	        key: "draw",
 	        value: function draw() {
+	            this.gl.enableVertexAttribArray(this.prg.vertexPosition);
 	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
 	            //这个地方要写在bind后,相当于获取并设置顶点数据
 	            this.gl.vertexAttribPointer(this.prg.vertexPosition, 3, this.gl.FLOAT, false, 0, 0);
-	            this.gl.enableVertexAttribArray(this.prg.vertexPosition);
 
 	            this.gl.enableVertexAttribArray(this.prg.vertexColor);
 	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
@@ -564,7 +564,7 @@
 	            this.vertices = [];
 	            this.indices = [];
 	            this.colors = [];
-	            var halfLineWidth = 1.0;
+	            var halfLineWidth = 0.5;
 	            var x = this.dataSource.scaleStartX;
 	            var maxZ = this.dataSource.colGap * (-this.dataSource.rowCount / 2);
 	            var offset = 0;

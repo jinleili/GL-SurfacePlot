@@ -26,6 +26,7 @@ export class SurfaceChart {
         this.renderer = new WebGLRenderer();
         this.renderer.setStyle( params.width, params.height, `margin:0px; position:absolute; z-index:10`);
         this.gl = this.renderer.gl;
+
         this.style.canvasHeight = this.renderer.canvasHeight;
         this.style.canvasWidth = this.renderer.canvasWidth;
 
@@ -77,13 +78,12 @@ export class SurfaceChart {
      * 绘制笔触
      */
     draw() {
-        this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
-        this.gl.disable(this.gl.DEPTH_TEST);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
+        this.gl.enable(this.gl.BLEND);
         this.scale.draw();
-
         this.surface.draw();
     }
 
