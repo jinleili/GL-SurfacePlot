@@ -13,6 +13,7 @@ export class SCStyle {
         this.rgbFontColor = Color.hex2rgb(this.fontColor);
         this.rgbBackgroundColor = Color.hex2rgb(this.backgroundColor);
 
+        //这里的 padding 并不表示最终曲面与画板的实际内边距
         this.paddingLR = 50;
         this.paddingTop = 50;
         this.paddingBottom = 50;

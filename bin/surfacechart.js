@@ -113,17 +113,14 @@
 	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.style);
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
-	        // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
-	        // Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
-
-	        // console.log(this.dataSource.colGap*this.dataSource.rowCount);
-	        _Matrix.Matrix4.translate(this.mvMatrix, [0.0, 0.0, -this.style.canvasHeight]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.4, [1, 0, 0]);
-	        // Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
+	        var offsetZ = -this.style.canvasHeight + this.dataSource.zFar;
+	        _Matrix.Matrix4.translate(this.mvMatrix, [0.0, 50, offsetZ]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.35, [1, 0, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.4, [0, 1, 0]);
 
 	        //构建一个与图表坐标系一致的投影矩阵
 	        // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
-	        this.pMatrix = _Matrix.Matrix4.perspective(45, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
+	        this.pMatrix = _Matrix.Matrix4.perspective(60 / 180 * Math.PI, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
 
 	        this.initProgram();
 
@@ -298,8 +295,10 @@
 	        value: function _generateVertices() {
 	            this.vertices = [];
 	            this.colors = [];
+	            //z 轴远端坐标
+	            this.zFar = -(this.colGap * this.rowCount / 2);
 	            //初始值给正, 避免后面赋值时的条件判断
-	            var z = -(this.colGap * this.rowCount + this.colGap);
+	            var z = this.zFar - this.colGap;
 	            for (var i = 0; i < this.rowCount; i++) {
 	                z += this.colGap;
 
@@ -571,17 +570,18 @@
 	            this.vertices = [];
 	            this.indices = [];
 	            this.colors = [];
-	            var halfLineWidth = 0.5;
+	            var halfLineWidth = 1.0;
 	            var x = this.dataSource.scaleStartX;
-	            var maxZ = this.dataSource.colGap * -this.dataSource.rowCount;
+	            var maxZ = this.dataSource.zFar;
 	            var offset = 0;
 	            var color = this.dataSource.style.rgbFontColor;
-	            var bottom = void 0,
+	            var y = void 0,
+	                bottom = void 0,
 	                top = void 0,
 	                topRight = void 0;
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
-	                var y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
-	                bottom = [x, y, 0];
+	                y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
+	                bottom = [x, y, -maxZ];
 	                top = [x, y, maxZ];
 	                topRight = [-x, y, maxZ];
 	                this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
@@ -590,6 +590,13 @@
 	                this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	            }
 	            //底部刻度
+	            bottom = [-x, y, maxZ];
+	            top = [-x, y, -maxZ];
+	            topRight = [x, y, -maxZ];
+	            this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
+	            this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
+	            offset += 6;
+	            this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	        }
 	    }, {
 	        key: "draw",
@@ -641,6 +648,7 @@
 	        this.rgbFontColor = _Color.Color.hex2rgb(this.fontColor);
 	        this.rgbBackgroundColor = _Color.Color.hex2rgb(this.backgroundColor);
 
+	        //这里的 padding 并不表示最终曲面与画板的实际内边距
 	        this.paddingLR = 50;
 	        this.paddingTop = 50;
 	        this.paddingBottom = 50;
