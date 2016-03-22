@@ -10,6 +10,8 @@ export class SCStyle {
         this.height = params.height;
         this.fontColor = params.fontColor ? params.fontColor : 0xfafafa;
         this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
+        this.rgbFontColor = Color.hex2rgb(this.fontColor);
+        this.rgbBackgroundColor = Color.hex2rgb(this.backgroundColor);
 
         this.paddingLR = 50;
         this.paddingTop = 50;
@@ -36,8 +38,5 @@ export class SCStyle {
     get canvasHeight() {
         return this._canvasHeight;
     }
-    
-    rgbFontColor() {
-        return Color.hex2rgb(this.fontColor);
-    }
+
 }

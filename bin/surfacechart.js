@@ -99,7 +99,7 @@
 	        this.style = new _SCStyle.SCStyle(params);
 
 	        this.renderer = new _WebGLRenderer.WebGLRenderer();
-	        this.renderer.setStyle(params.width, params.height, 'margin:0px; position:absolute; z-index:10');
+	        this.renderer.setStyle(params.width, params.height, 'margin:0px; position:absolute; z-index:0;');
 	        this.gl = this.renderer.gl;
 
 	        this.style.canvasHeight = this.renderer.canvasHeight;
@@ -154,7 +154,7 @@
 	        }
 
 	        /**
-	         * 绘制笔触
+	         * 绘制
 	         */
 
 	    }, {
@@ -162,9 +162,13 @@
 	        value: function draw() {
 	            this.gl.viewport(0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
 	            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-	            this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
+	            var color = this.style.rgbBackgroundColor;
+	            this.gl.clearColor(color[0], color[1], color[2], 1.0);
 
+	            //透明度混合
 	            this.gl.enable(this.gl.BLEND);
+	            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+
 	            this.scale.draw();
 	            this.surface.draw();
 	        }
@@ -568,7 +572,7 @@
 	            var x = this.dataSource.scaleStartX;
 	            var maxZ = this.dataSource.colGap * (-this.dataSource.rowCount / 2);
 	            var offset = 0;
-	            var color = this.dataSource.style.rgbFontColor();
+	            var color = this.dataSource.style.rgbFontColor;
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
 	                var y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
 	                var bottom = [x, y, 0];
@@ -627,6 +631,8 @@
 	        this.height = params.height;
 	        this.fontColor = params.fontColor ? params.fontColor : 0xfafafa;
 	        this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
+	        this.rgbFontColor = _Color.Color.hex2rgb(this.fontColor);
+	        this.rgbBackgroundColor = _Color.Color.hex2rgb(this.backgroundColor);
 
 	        this.paddingLR = 50;
 	        this.paddingTop = 50;
@@ -639,11 +645,6 @@
 	    }
 
 	    _createClass(SCStyle, [{
-	        key: 'rgbFontColor',
-	        value: function rgbFontColor() {
-	            return _Color.Color.hex2rgb(this.fontColor);
-	        }
-	    }, {
 	        key: 'canvasWidth',
 	        set: function set(newValue) {
 	            this._canvasWidth = newValue;
@@ -707,7 +708,7 @@
 	    }, {
 	        key: 'createTitle',
 	        value: function createTitle(style) {
-	            var styleStr = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + style.width + 'px; ' + 'height:30px; text-align: center; z-index: 0';
+	            var styleStr = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + style.width + 'px; ' + 'height:30px; text-align: center; z-index: 10';
 	            var titleElement = this.createElement('h3', styleStr);
 	            titleElement.innerHTML = this.title;
 	            this.panel.appendChild(titleElement);
@@ -832,7 +833,9 @@
 	            var names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'];
 	            var context = null;
 	            for (var i = 0; i < names.length; ++i) {
-	                context = this.canvas.getContext(names[i]);
+	                context = this.canvas.getContext(names[i], {
+	                    // premultipliedAlpha: false  // Ask for non-premultiplied alpha
+	                });
 	                if (context) {
 	                    break;
 	                }

@@ -18,7 +18,7 @@ export class  SCDomElement {
     }
 
     createTitle(style) {
-        let styleStr = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + style.width + 'px; ' + 'height:30px; text-align: center; z-index: 0';
+        let styleStr = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + style.width + 'px; ' + 'height:30px; text-align: center; z-index: 10';
         let titleElement = this.createElement('h3', styleStr);
         titleElement.innerHTML = this.title;
         this.panel.appendChild(titleElement);

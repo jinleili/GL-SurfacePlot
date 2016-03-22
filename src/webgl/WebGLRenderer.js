@@ -57,7 +57,9 @@ export class WebGLRenderer {
         let names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'];
         let context = null;
         for (var i = 0; i < names.length; ++i) {
-            context = this.canvas.getContext(names[i]);
+            context = this.canvas.getContext(names[i], {
+                // premultipliedAlpha: false  // Ask for non-premultiplied alpha
+            });
             if (context) {
                 break;
             }
