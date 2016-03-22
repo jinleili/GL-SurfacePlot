@@ -118,20 +118,12 @@
 
 	        // console.log(this.dataSource.colGap*this.dataSource.rowCount);
 	        _Matrix.Matrix4.translate(this.mvMatrix, [0.0, 0.0, -this.style.canvasHeight]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.2, [1, 0, 0]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.4, [1, 0, 0]);
+	        // Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
 
 	        //构建一个与图表坐标系一致的投影矩阵
 	        // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
 	        this.pMatrix = _Matrix.Matrix4.perspective(45, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
-
-	        var v = [0.5, 0.5, 0.0, 0.0];
-	        _Vector.Vector4.applyMatrix4(v, this.mvMatrix);
-	        console.log('perspective 0:', v);
-
-	        _Vector.Vector4.applyMatrix4(v, this.pMatrix);
-
-	        console.log('perspective 1:', v, this.pMatrix);
 
 	        this.initProgram();
 
@@ -307,7 +299,7 @@
 	            this.vertices = [];
 	            this.colors = [];
 	            //初始值给正, 避免后面赋值时的条件判断
-	            var z = -(this.colGap * this.rowCount / 2 + this.colGap);
+	            var z = -(this.colGap * this.rowCount + this.colGap);
 	            for (var i = 0; i < this.rowCount; i++) {
 	                z += this.colGap;
 
@@ -581,7 +573,7 @@
 	            this.colors = [];
 	            var halfLineWidth = 0.5;
 	            var x = this.dataSource.scaleStartX;
-	            var maxZ = this.dataSource.colGap * (-this.dataSource.rowCount / 2);
+	            var maxZ = this.dataSource.colGap * -this.dataSource.rowCount;
 	            var offset = 0;
 	            var color = this.dataSource.style.rgbFontColor;
 	            var bottom = void 0,
@@ -589,7 +581,7 @@
 	                topRight = void 0;
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
 	                var y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
-	                bottom = [x, y, -maxZ];
+	                bottom = [x, y, 0];
 	                top = [x, y, maxZ];
 	                topRight = [-x, y, maxZ];
 	                this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);

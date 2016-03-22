@@ -28,13 +28,13 @@ export class SCScale {
         this.colors = [];
         let halfLineWidth = 0.5;
         let x = this.dataSource.scaleStartX;
-        let maxZ = this.dataSource.colGap * (-this.dataSource.rowCount/2);
+        let maxZ = this.dataSource.colGap * (-this.dataSource.rowCount);
         let offset = 0;
         let color = this.dataSource.style.rgbFontColor;
         let bottom, top, topRight;
         for (let i=0; i<this.dataSource.scaleLabels.length; i++) {
             let y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
-            bottom = [x, y,  -maxZ];
+            bottom = [x, y,  0];
             top = [x, y,  maxZ];
             topRight = [-x, y, maxZ];
             this.vertices.push( bottom[0], bottom[1]+halfLineWidth, bottom[2],

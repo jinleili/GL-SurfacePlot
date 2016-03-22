@@ -42,20 +42,12 @@ export class SurfaceChart {
 
         // console.log(this.dataSource.colGap*this.dataSource.rowCount);
         Matrix4.translate(this.mvMatrix, [0.0,  0.0, -this.style.canvasHeight]);
-        Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.2, [1, 0, 0]);
-        Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
+        Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.4, [1, 0, 0]);
+        // Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
 
         //构建一个与图表坐标系一致的投影矩阵
         // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
         this.pMatrix = Matrix4.perspective(45, this.style.canvasWidth/ this.style.canvasHeight, 0.1, 50000);
-
-        let v = [ 0.5, 0.5, 0.0, 0.0];
-        Vector4.applyMatrix4(v, this.mvMatrix);
-        console.log('perspective 0:', v);
-
-        Vector4.applyMatrix4(v, this.pMatrix);
-
-        console.log('perspective 1:', v, this.pMatrix);
 
         this.initProgram();
 
