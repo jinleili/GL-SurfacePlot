@@ -5,7 +5,7 @@
 import { SCDataSource } from './SCDataSource.js';
 import { SCSurface } from './SCSurface.js';
 import { SCScale } from './SCScale.js';
-
+import { SCStyle } from './SCStyle.js';
 import { SCDomElement } from './SCDomElement.js';
 
 import { pixelVS, pixelFS } from './webgl/shaders/shaders.js';
@@ -14,10 +14,6 @@ import { Matrix4 } from './webgl/math/Matrix4.js';
 
 export class SurfaceChart {
     constructor(dataArr,  params) {
-        this.paddingLR = 50;
-        this.paddingTop = 50;
-        this.paddingBottom = 50;
-
         if (params.width < 300 || params.height < 200) {
             throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
         }
@@ -25,16 +21,18 @@ export class SurfaceChart {
             throw new Error('SurfaceChart 需要有效数组做为初始化参数');
         }
 
+        this.style = new SCStyle(params);
+
         this.renderer = new WebGLRenderer();
         this.renderer.setStyle( params.width, params.height, `margin:0px; position:absolute; z-index:10`);
         this.gl = this.renderer.gl;
-        this.width = this.renderer.canvasWidth;
-        this.height = this.renderer.canvasHeight;
+        this.style.canvasHeight = this.renderer.canvasHeight;
+        this.style.canvasWidth = this.renderer.canvasWidth;
 
-        this.domElement = (new SCDomElement(params)).panel;
+        this.domElement = (new SCDomElement(this.style, params.title)).panel;
         this.domElement.appendChild(this.renderer.canvas);
 
-        this.dataSource = new SCDataSource(dataArr, this.width - this.paddingLR*2, this.height - this.paddingBottom - this.paddingTop);
+        this.dataSource = new SCDataSource(dataArr, this.style);
 
         this.mvMatrix = Matrix4.identity();
         // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);

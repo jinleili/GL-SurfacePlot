@@ -4,11 +4,12 @@
 import {Color} from './webgl/utils/Color.js';
 
 export class  SCDataSource {
-    constructor(dataArr, drawWidth , drawHeight ) {
+    constructor(dataArr, styleObj) {
         let colors = [0x215c91,  0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
         this.colorGroup = this._colors(colors);
-        this.drawWidth = drawWidth;
-        this.drawHeight = drawHeight;
+        this.style = styleObj;
+        this.drawWidth = styleObj.drawWidth;
+        this.drawHeight = styleObj.drawHeight;
         this.rowCount = dataArr.length;
         this._validateRowAndCol(this.rowCount);
         this.colCount = dataArr[0].length;

@@ -73,23 +73,21 @@
 
 	var _SCScale = __webpack_require__(5);
 
-	var _SCDomElement = __webpack_require__(6);
+	var _SCStyle = __webpack_require__(6);
 
-	var _shaders = __webpack_require__(7);
+	var _SCDomElement = __webpack_require__(7);
 
-	var _WebGLRenderer = __webpack_require__(8);
+	var _shaders = __webpack_require__(8);
 
-	var _Matrix = __webpack_require__(10);
+	var _WebGLRenderer = __webpack_require__(9);
+
+	var _Matrix = __webpack_require__(11);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var SurfaceChart = exports.SurfaceChart = function () {
 	    function SurfaceChart(dataArr, params) {
 	        _classCallCheck(this, SurfaceChart);
-
-	        this.paddingLR = 50;
-	        this.paddingTop = 50;
-	        this.paddingBottom = 50;
 
 	        if (params.width < 300 || params.height < 200) {
 	            throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
@@ -98,16 +96,18 @@
 	            throw new Error('SurfaceChart 需要有效数组做为初始化参数');
 	        }
 
+	        this.style = new _SCStyle.SCStyle(params);
+
 	        this.renderer = new _WebGLRenderer.WebGLRenderer();
 	        this.renderer.setStyle(params.width, params.height, 'margin:0px; position:absolute; z-index:10');
 	        this.gl = this.renderer.gl;
-	        this.width = this.renderer.canvasWidth;
-	        this.height = this.renderer.canvasHeight;
+	        this.style.canvasHeight = this.renderer.canvasHeight;
+	        this.style.canvasWidth = this.renderer.canvasWidth;
 
-	        this.domElement = new _SCDomElement.SCDomElement(params).panel;
+	        this.domElement = new _SCDomElement.SCDomElement(this.style, params.title).panel;
 	        this.domElement.appendChild(this.renderer.canvas);
 
-	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.width - this.paddingLR * 2, this.height - this.paddingBottom - this.paddingTop);
+	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.style);
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
 	        // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
@@ -194,13 +194,14 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var SCDataSource = exports.SCDataSource = function () {
-	    function SCDataSource(dataArr, drawWidth, drawHeight) {
+	    function SCDataSource(dataArr, styleObj) {
 	        _classCallCheck(this, SCDataSource);
 
 	        var colors = [0x215c91, 0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
 	        this.colorGroup = this._colors(colors);
-	        this.drawWidth = drawWidth;
-	        this.drawHeight = drawHeight;
+	        this.style = styleObj;
+	        this.drawWidth = styleObj.drawWidth;
+	        this.drawHeight = styleObj.drawHeight;
 	        this.rowCount = dataArr.length;
 	        this._validateRowAndCol(this.rowCount);
 	        this.colCount = dataArr[0].length;
@@ -519,7 +520,7 @@
 /* 5 */
 /***/ function(module, exports) {
 
-	'use strict';
+	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
@@ -558,7 +559,7 @@
 
 
 	    _createClass(SCScale, [{
-	        key: 'generateScale',
+	        key: "generateScale",
 	        value: function generateScale() {
 	            this.vertices = [];
 	            this.indices = [];
@@ -567,7 +568,7 @@
 	            var x = this.dataSource.scaleStartX;
 	            var maxZ = this.dataSource.colGap * (-this.dataSource.rowCount / 2);
 	            var offset = 0;
-	            var color = [1.0, 0.0, 0.0];
+	            var color = this.dataSource.style.rgbFontColor();
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
 	                var y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
 	                var bottom = [x, y, 0];
@@ -578,10 +579,9 @@
 	                offset = i * 6;
 	                this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	            }
-	            console.log('scscale', this.vertices, this.indices);
 	        }
 	    }, {
-	        key: 'draw',
+	        key: "draw",
 	        value: function draw() {
 	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
 	            //这个地方要写在bind后,相当于获取并设置顶点数据
@@ -609,44 +609,106 @@
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
-	exports.SCDomElement = undefined;
+	exports.SCStyle = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/21.
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/22.
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 	var _Color = __webpack_require__(3);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var SCDomElement = exports.SCDomElement = function () {
-	    function SCDomElement(params) {
-	        _classCallCheck(this, SCDomElement);
+	var SCStyle = exports.SCStyle = function () {
+	    function SCStyle(params) {
+	        _classCallCheck(this, SCStyle);
 
 	        this.width = params.width;
 	        this.height = params.height;
-	        this.title = params.title;
 	        this.fontColor = params.fontColor ? params.fontColor : 0xfafafa;
 	        this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
 
-	        this.panel = this.createPanel();
+	        this.paddingLR = 50;
+	        this.paddingTop = 50;
+	        this.paddingBottom = 50;
+
+	        this._canvasWidth = 0;
+	        this._canvasHeight = 0;
+	        this.drawWidth = 0;
+	        this.drawHeight = 0;
+	    }
+
+	    _createClass(SCStyle, [{
+	        key: 'rgbFontColor',
+	        value: function rgbFontColor() {
+	            return _Color.Color.hex2rgb(this.fontColor);
+	        }
+	    }, {
+	        key: 'canvasWidth',
+	        set: function set(newValue) {
+	            this._canvasWidth = newValue;
+	            this.drawWidth = this._canvasWidth - this.paddingLR * 2;
+	        },
+	        get: function get() {
+	            return this._canvasWidth;
+	        }
+	    }, {
+	        key: 'canvasHeight',
+	        set: function set(newValue) {
+	            this._canvasHeight = newValue;
+	            this.drawHeight = this._canvasHeight - (this.paddingBottom + this.paddingTop);
+	        },
+	        get: function get() {
+	            return this._canvasHeight;
+	        }
+	    }]);
+
+	    return SCStyle;
+	}();
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/21.
+	 */
+
+	var SCDomElement = exports.SCDomElement = function () {
+	    function SCDomElement(style) {
+	        var title = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+
+	        _classCallCheck(this, SCDomElement);
+
+	        this.title = title;
+	        this.panel = this.createPanel(style);
 
 	        if (this.title) {
-	            this.createTitle();
+	            this.createTitle(style);
 	        }
 	    }
 
 	    _createClass(SCDomElement, [{
 	        key: 'createPanel',
-	        value: function createPanel() {
-	            var style = 'position:relative;display:block; padding:0px; margin: 0px;  -webkit-tap-highlight-color:rgba(0, 0, 0, 0); -webkit-user-select: none; user-select: none; width:' + this.width + 'px; ' + 'height:' + this.height + 'px; color: ' + this.fontColor + '; background-color:' + this.backgroundColor;
-	            return this.createElement('div', style);
+	        value: function createPanel(style) {
+	            var styleStr = 'position:relative;display:block; padding:0px; margin: 0px;  -webkit-tap-highlight-color:rgba(0, 0, 0, 0); -webkit-user-select: none; user-select: none; width:' + style.width + 'px; ' + 'height:' + style.height + 'px; color: ' + style.fontColor + '; background-color:' + style.backgroundColor;
+	            return this.createElement('div', styleStr);
 	        }
 	    }, {
 	        key: 'createTitle',
-	        value: function createTitle() {
-	            var style = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + this.width + 'px; ' + 'height:30px; text-align: center; z-index: 0';
-	            var titleElement = this.createElement('h3', style);
+	        value: function createTitle(style) {
+	            var styleStr = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + style.width + 'px; ' + 'height:30px; text-align: center; z-index: 0';
+	            var titleElement = this.createElement('h3', styleStr);
 	            titleElement.innerHTML = this.title;
 	            this.panel.appendChild(titleElement);
 	        }
@@ -663,7 +725,7 @@
 	}();
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -680,7 +742,7 @@
 	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.6);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);\n}\n";
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -695,7 +757,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _GLUtils = __webpack_require__(9);
+	var _GLUtils = __webpack_require__(10);
 
 	var GLUtils = _interopRequireWildcard(_GLUtils);
 
@@ -783,7 +845,7 @@
 	}();
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -902,7 +964,7 @@
 	}
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	"use strict";

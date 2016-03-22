@@ -30,7 +30,7 @@ export class SCScale {
         let x = this.dataSource.scaleStartX;
         let maxZ = this.dataSource.colGap * (-this.dataSource.rowCount/2);
         let offset = 0;
-        let color = [1.0, 0.0, 0.0];
+        let color = this.dataSource.style.rgbFontColor();
         for (let i=0; i<this.dataSource.scaleLabels.length; i++) {
             let y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
             let bottom = [x, y,  0];
