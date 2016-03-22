@@ -288,6 +288,7 @@
 
 	        /**
 	         * 转换数据点为屏幕顶点坐标
+	         * 顶点由内向外生成
 	         */
 
 	    }, {
@@ -296,9 +297,9 @@
 	            this.vertices = [];
 	            this.colors = [];
 	            //初始值给正, 避免后面赋值时的条件判断
-	            var z = this.colGap * this.rowCount / 2 + this.colGap;
+	            var z = -(this.colGap * this.rowCount / 2 + this.colGap);
 	            for (var i = 0; i < this.rowCount; i++) {
-	                z -= this.colGap;
+	                z += this.colGap;
 
 	                var x = -(this.drawWidth / 2.0) - this.colGap;
 	                var rowData = this.dataSource[i];

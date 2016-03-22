@@ -85,14 +85,15 @@ export class  SCDataSource {
 
     /**
      * 转换数据点为屏幕顶点坐标
+     * 顶点由内向外生成
      */
     _generateVertices() {
         this.vertices = [];
         this.colors = [];
         //初始值给正, 避免后面赋值时的条件判断
-        let z = this.colGap*this.rowCount / 2 + this.colGap;
+        let z = -(this.colGap*this.rowCount / 2 + this.colGap);
         for (let i=0; i<this.rowCount; i++) {
-            z -= this.colGap;
+            z += this.colGap;
 
             let x =-(this.drawWidth/2.0) -this.colGap;
             let rowData = this.dataSource[i];
