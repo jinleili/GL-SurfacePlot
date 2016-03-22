@@ -83,6 +83,8 @@
 
 	var _Matrix = __webpack_require__(11);
 
+	var _Vector = __webpack_require__(12);
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var SurfaceChart = exports.SurfaceChart = function () {
@@ -112,16 +114,24 @@
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
 	        // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
-	        _Matrix.Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
+	        // Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
 
-	        _Matrix.Matrix4.translate(this.mvMatrix, [0, -20, 0]);
+	        // console.log(this.dataSource.colGap*this.dataSource.rowCount);
+	        _Matrix.Matrix4.translate(this.mvMatrix, [0.0, 0.0, -this.style.canvasHeight]);
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.2, [1, 0, 0]);
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
 
-	        // this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
 	        //构建一个与图表坐标系一致的投影矩阵
-	        this.pMatrix = _Matrix.Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
-	        // this.pMatrix = Matrix4.perspective(45, this.width/this.height, 0.01, 5000);
+	        // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
+	        this.pMatrix = _Matrix.Matrix4.perspective(45, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
+
+	        var v = [0.5, 0.5, 0.0, 0.0];
+	        _Vector.Vector4.applyMatrix4(v, this.mvMatrix);
+	        console.log('perspective 0:', v);
+
+	        _Vector.Vector4.applyMatrix4(v, this.pMatrix);
+
+	        console.log('perspective 1:', v, this.pMatrix);
 
 	        this.initProgram();
 
@@ -479,7 +489,7 @@
 	        this.colorList = dataSource.colors;
 	        this.indices = dataSource.indices;
 	        // console.log(this.vertices, this.colorList, this.indices);
-	        // this.vertices = [0.0,0.0, 0.2,  50.0, 0.0, 0.2,  50.0, 50.0, 0.2];
+	        // this.vertices = [-25,0.0, 0.0,  25, 0.0, 0.0,  25, 50, 0.0];
 	        // this.indices = [0, 1, 2];
 	        // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];
 	        this.vetexBuffer = gl.createArrayBufferWithData(this.vertices);
@@ -574,16 +584,20 @@
 	            var maxZ = this.dataSource.colGap * (-this.dataSource.rowCount / 2);
 	            var offset = 0;
 	            var color = this.dataSource.style.rgbFontColor;
+	            var bottom = void 0,
+	                top = void 0,
+	                topRight = void 0;
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
 	                var y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
-	                var bottom = [x, y, 0];
-	                var top = [x, y, maxZ];
-	                var topRight = [-x, y, maxZ];
+	                bottom = [x, y, -maxZ];
+	                top = [x, y, maxZ];
+	                topRight = [-x, y, maxZ];
 	                this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
 	                this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
 	                offset = i * 6;
 	                this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	            }
+	            //底部刻度
 	        }
 	    }, {
 	        key: "draw",
@@ -1090,14 +1104,15 @@
 	        }
 	    }, {
 	        key: "translate",
-	        value: function translate(a, v) {
+	        value: function translate(out, v) {
 	            var x = v[0],
 	                y = v[1],
 	                z = v[2];
-	            a[12] += a[0] * x + a[4] * y + a[8] * z;
-	            a[13] += a[1] * x + a[5] * y + a[9] * z;
-	            a[14] += a[2] * x + a[6] * y + a[10] * z;
-	            a[15] += a[3] * x + a[7] * y + a[11] * z;
+	            out[12] += out[0] * x + out[4] * y + out[8] * z;
+	            out[13] += out[1] * x + out[5] * y + out[9] * z;
+	            out[14] += out[2] * x + out[6] * y + out[10] * z;
+	            out[15] += out[3] * x + out[7] * y + out[11] * z;
+	            return out;
 	        }
 	    }, {
 	        key: "inverse",
@@ -1246,6 +1261,51 @@
 	    }]);
 
 	    return Matrix4;
+	}();
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/22.
+	 */
+
+	var Vector4 = exports.Vector4 = function () {
+	    function Vector4() {
+	        _classCallCheck(this, Vector4);
+	    }
+
+	    _createClass(Vector4, null, [{
+	        key: "applyMatrix4",
+	        value: function applyMatrix4(vec, m) {
+	            var x = vec[0];
+	            var y = vec[1];
+	            var z = vec[2];
+	            var w = vec[3];
+
+	            var e = m;
+
+	            vec[0] = e[0] * x + e[4] * y + e[8] * z + e[12] * w;
+	            vec[1] = e[1] * x + e[5] * y + e[9] * z + e[13] * w;
+	            vec[2] = e[2] * x + e[6] * y + e[10] * z + e[14] * w;
+	            vec[3] = e[3] * x + e[7] * y + e[11] * z + e[15] * w;
+
+	            return vec;
+	        }
+	    }]);
+
+	    return Vector4;
 	}();
 
 /***/ }

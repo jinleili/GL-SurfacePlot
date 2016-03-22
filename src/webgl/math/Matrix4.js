@@ -98,12 +98,13 @@ export class Matrix4 {
         a[11] *= z;
     }
 
-    static translate(a, v) {
+    static translate(out, v) {
         let x = v[0], y = v[1], z = v[2];
-        a[12] += a[0] * x + a[4] * y + a[8] * z;
-        a[13] += a[1] * x + a[5] * y + a[9] * z;
-        a[14] += a[2] * x + a[6] * y + a[10] * z;
-        a[15] += a[3] * x + a[7] * y + a[11] * z;
+        out[12] += out[0] * x + out[4] * y + out[8] * z;
+        out[13] += out[1] * x + out[5] * y + out[9] * z;
+        out[14] += out[2] * x + out[6] * y + out[10] * z;
+        out[15] += out[3] * x + out[7] * y + out[11] * z;
+        return out;
     }
 
     static inverse(a) {

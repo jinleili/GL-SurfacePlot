@@ -31,11 +31,12 @@ export class SCScale {
         let maxZ = this.dataSource.colGap * (-this.dataSource.rowCount/2);
         let offset = 0;
         let color = this.dataSource.style.rgbFontColor;
+        let bottom, top, topRight;
         for (let i=0; i<this.dataSource.scaleLabels.length; i++) {
             let y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
-            let bottom = [x, y,  0];
-            let top = [x, y,  maxZ];
-            let topRight = [-x, y, maxZ];
+            bottom = [x, y,  -maxZ];
+            top = [x, y,  maxZ];
+            topRight = [-x, y, maxZ];
             this.vertices.push( bottom[0], bottom[1]+halfLineWidth, bottom[2],
                 bottom[0], bottom[1]-halfLineWidth, bottom[2],
                 top[0], top[1]+halfLineWidth, top[2],
@@ -49,6 +50,8 @@ export class SCScale {
                 offset+2, offset+3, offset+4,
                 offset+3,  offset+5, offset+4);
         }
+        //底部刻度
+
     }
 
     draw() {

@@ -11,6 +11,7 @@ import { SCDomElement } from './SCDomElement.js';
 import { pixelVS, pixelFS } from './webgl/shaders/shaders.js';
 import { WebGLRenderer } from './webgl/WebGLRenderer.js';
 import { Matrix4 } from './webgl/math/Matrix4.js';
+import { Vector4 } from './webgl/math/Vector4.js';
 
 export class SurfaceChart {
     constructor(dataArr,  params) {
@@ -37,16 +38,24 @@ export class SurfaceChart {
 
         this.mvMatrix = Matrix4.identity();
         // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
-        Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
+        // Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
 
-        Matrix4.translate(this.mvMatrix, [0, -20, 0]);
+        // console.log(this.dataSource.colGap*this.dataSource.rowCount);
+        Matrix4.translate(this.mvMatrix, [0.0,  0.0, -this.style.canvasHeight]);
         Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.2, [1, 0, 0]);
         Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
 
-        // this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
         //构建一个与图表坐标系一致的投影矩阵
-        this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
-        // this.pMatrix = Matrix4.perspective(45, this.width/this.height, 0.01, 5000);
+        // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
+        this.pMatrix = Matrix4.perspective(45, this.style.canvasWidth/ this.style.canvasHeight, 0.1, 50000);
+
+        let v = [ 0.5, 0.5, 0.0, 0.0];
+        Vector4.applyMatrix4(v, this.mvMatrix);
+        console.log('perspective 0:', v);
+
+        Vector4.applyMatrix4(v, this.pMatrix);
+
+        console.log('perspective 1:', v, this.pMatrix);
 
         this.initProgram();
 
