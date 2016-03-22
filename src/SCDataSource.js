@@ -73,6 +73,8 @@ export class  SCDataSource {
             }
             this.dataSource.push(newRowArr);
         }
+        
+        this.colGap  = (this.drawWidth)/(this.colCount-1);
 
         //生成刻度集合
         this._calculateScaleLabel();
@@ -86,7 +88,6 @@ export class  SCDataSource {
     _generateVertices() {
         this.vertices = [];
         this.colors = [];
-        this.colGap  = (this.drawWidth)/(this.colCount-1);
         //初始值给正, 避免后面赋值时的条件判断
         let z = this.colGap*this.rowCount / 2 + this.colGap;
         for (let i=0; i<this.rowCount; i++) {
@@ -150,7 +151,7 @@ export class  SCDataSource {
 
         this.scaleCenterY = this.minValue + distance/2.0;
         //标尺 在 x 轴上的绘制起点
-        this.scaleStartX = this.colCount/2 * (-scaleGap);
+        this.scaleStartX = this.colCount/2 * (-this.colGap);
 
         let currentLabel = 0;
         if (this.maxValue > 0 && this.minValue < 0) {

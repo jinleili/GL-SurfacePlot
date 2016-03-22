@@ -113,9 +113,9 @@
 	        // Matrix4.scale(this.mvMatrix, [1/this.width, 1/this.height, 1/this.height]);
 	        _Matrix.Matrix4.scale(this.mvMatrix, [0.6, 0.6, 0.7]);
 
-	        // Matrix4.translate(this.mvMatrix, [this.paddingLR, this.height/2, 0]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.3, [1, 0, 0]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.75, [0, 1, 0]);
+	        _Matrix.Matrix4.translate(this.mvMatrix, [0, -20, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.2, [1, 0, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.5, [0, 1, 0]);
 
 	        // this.pMatrix = Matrix4.orthogonal(0, this.renderer.canvasWidth, this.renderer.canvasHeight, 0, -5000.0, 5000.0);
 	        //构建一个与图表坐标系一致的投影矩阵
@@ -273,6 +273,8 @@
 	                this.dataSource.push(newRowArr);
 	            }
 
+	            this.colGap = this.drawWidth / (this.colCount - 1);
+
 	            //生成刻度集合
 	            this._calculateScaleLabel();
 	            //转换数据点为屏幕顶点坐标
@@ -288,7 +290,6 @@
 	        value: function _generateVertices() {
 	            this.vertices = [];
 	            this.colors = [];
-	            this.colGap = this.drawWidth / (this.colCount - 1);
 	            //初始值给正, 避免后面赋值时的条件判断
 	            var z = this.colGap * this.rowCount / 2 + this.colGap;
 	            for (var i = 0; i < this.rowCount; i++) {
@@ -357,7 +358,7 @@
 
 	            this.scaleCenterY = this.minValue + distance / 2.0;
 	            //标尺 在 x 轴上的绘制起点
-	            this.scaleStartX = this.colCount / 2 * -scaleGap;
+	            this.scaleStartX = this.colCount / 2 * -this.colGap;
 
 	            var currentLabel = 0;
 	            if (this.maxValue > 0 && this.minValue < 0) {
@@ -562,10 +563,9 @@
 	            this.vertices = [];
 	            this.indices = [];
 	            this.colors = [];
-	            var halfLineWidth = 0.5;
+	            var halfLineWidth = 1.0;
 	            var x = this.dataSource.scaleStartX;
-	            var maxZ = this.dataSource.colGap * this.dataSource.rowCount;
-	            console.log('maxZ:', maxZ);
+	            var maxZ = this.dataSource.colGap * (-this.dataSource.rowCount / 2);
 	            var offset = 0;
 	            var color = [1.0, 0.0, 0.0];
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
@@ -573,12 +573,12 @@
 	                var bottom = [x, y, 0];
 	                var top = [x, y, maxZ];
 	                var topRight = [-x, y, maxZ];
-	                this.vertices.push(bottom[0] - halfLineWidth, bottom[1], bottom[2], bottom[0] + halfLineWidth, bottom[1], bottom[2], top[0] - halfLineWidth, top[1], top[2], top[0] + halfLineWidth, top[1], top[2], top[0] - halfLineWidth, top[1], top[2] - halfLineWidth, top[0] - halfLineWidth, top[1], top[2] + halfLineWidth, topRight[0], topRight[1], topRight[2] - halfLineWidth, topRight[0], topRight[1], topRight[2] + halfLineWidth);
-	                this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
-	                offset = i * 8;
-	                this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 5, offset + 6, offset + 7);
+	                this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
+	                this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
+	                offset = i * 6;
+	                this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	            }
-	            console.log('scscale', this.vertices, this.colors);
+	            console.log('scscale', this.vertices, this.indices);
 	        }
 	    }, {
 	        key: 'draw',

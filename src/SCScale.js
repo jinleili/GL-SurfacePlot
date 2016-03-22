@@ -26,10 +26,9 @@ export class SCScale {
         this.vertices = [];
         this.indices = [];
         this.colors = [];
-        let halfLineWidth = 0.5;
+        let halfLineWidth = 1.0;
         let x = this.dataSource.scaleStartX;
-        let maxZ = this.dataSource.colGap * this.dataSource.rowCount;
-        console.log('maxZ:', maxZ);
+        let maxZ = this.dataSource.colGap * (-this.dataSource.rowCount/2);
         let offset = 0;
         let color = [1.0, 0.0, 0.0];
         for (let i=0; i<this.dataSource.scaleLabels.length; i++) {
@@ -37,23 +36,19 @@ export class SCScale {
             let bottom = [x, y,  0];
             let top = [x, y,  maxZ];
             let topRight = [-x, y, maxZ];
-            this.vertices.push(bottom[0]-halfLineWidth, bottom[1], bottom[2],
-                bottom[0]+halfLineWidth, bottom[1], bottom[2],
-                top[0]-halfLineWidth, top[1], top[2],
-                top[0]+halfLineWidth, top[1], top[2],
-
-                top[0]-halfLineWidth, top[1], top[2]-halfLineWidth,
-                top[0]-halfLineWidth, top[1], top[2]+halfLineWidth,
-                topRight[0], topRight[1], topRight[2]-halfLineWidth,
-                topRight[0], topRight[1], topRight[2]+halfLineWidth);
-            this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
-            offset = i*8;
+            this.vertices.push( bottom[0], bottom[1]+halfLineWidth, bottom[2],
+                bottom[0], bottom[1]-halfLineWidth, bottom[2],
+                top[0], top[1]+halfLineWidth, top[2],
+                top[0], top[1]-halfLineWidth, top[2],
+                topRight[0], topRight[1]+halfLineWidth, topRight[2],
+                topRight[0], topRight[1]-halfLineWidth, topRight[2] );
+            this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
+            offset = i*6;
             this.indices.push(offset, offset+1, offset+2,
-                offset+1, offset+2, offset+3,
-                offset+4, offset+5, offset+6,
-                offset+5, offset+6, offset+7);
+                offset+1,  offset+3, offset+2,
+                offset+2, offset+3, offset+4,
+                offset+3,  offset+5, offset+4);
         }
-        console.log('scscale', this.vertices, this.colors);
     }
 
     draw() {
