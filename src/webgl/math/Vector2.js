@@ -18,6 +18,18 @@ export class Vector2 {
         return out;
     }
 
+    static applyMatrix4 ( vec, m ) {
+        let x = vec[0];
+        let y = vec[1];
+        let z = 0;
+        let w = 0;
+
+        vec[0] = m[ 0 ] * x + m[ 4 ] * y + m[ 8 ] * z + m[ 12 ] * w;
+        vec[1] = m[ 1 ] * x + m[ 5 ] * y + m[ 9 ] * z + m[ 13 ] * w;
+
+        return vec;
+    }
+
     static generateVector(origin, p) {
         return [p[0] - origin[0], p[1] - origin[1]];
     }

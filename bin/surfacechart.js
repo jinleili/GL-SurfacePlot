@@ -73,17 +73,17 @@
 
 	var _SCRuler = __webpack_require__(5);
 
-	var _SCStyle = __webpack_require__(6);
+	var _SCStyle = __webpack_require__(7);
 
-	var _SCDomElement = __webpack_require__(7);
+	var _SCDomElement = __webpack_require__(8);
 
-	var _shaders = __webpack_require__(8);
+	var _shaders = __webpack_require__(10);
 
-	var _WebGLRenderer = __webpack_require__(9);
+	var _WebGLRenderer = __webpack_require__(11);
 
-	var _Matrix = __webpack_require__(11);
+	var _Matrix = __webpack_require__(13);
 
-	var _Vector = __webpack_require__(12);
+	var _Vector = __webpack_require__(14);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -107,7 +107,8 @@
 	        this.style.canvasHeight = this.renderer.canvasHeight;
 	        this.style.canvasWidth = this.renderer.canvasWidth;
 
-	        this.domElement = new _SCDomElement.SCDomElement(this.style, params.title).panel;
+	        this.domElementObj = new _SCDomElement.SCDomElement(this.style, params.title);
+	        this.domElement = this.domElementObj.panel;
 	        this.domElement.appendChild(this.renderer.canvas);
 
 	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.style);
@@ -128,8 +129,9 @@
 	        this.surface = new _SCSurface.SCSurface(this.renderer.gl, this.prg, this.dataSource);
 	        //标尺线
 	        this.ruler = new _SCRuler.SCRuler(this.renderer.gl, this.prg, this.dataSource);
-
 	        this.draw();
+
+	        this.domElementObj.showLabels(this.ruler.labelList, this.mvMatrix);
 	    }
 
 	    /**
@@ -524,23 +526,25 @@
 
 /***/ },
 /* 5 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+	exports.SCRuler = undefined;
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/21.
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      *
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * 管理图表上的标尺线及刻度
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+
+	var _SCLabel = __webpack_require__(6);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Created by grenlight on 16/3/21.
-	 *
-	 * 管理图表上的标尺线及刻度
-	 */
 
 	var SCRuler = exports.SCRuler = function () {
 	    function SCRuler(gl, prg, dataSource) {
@@ -565,7 +569,7 @@
 
 
 	    _createClass(SCRuler, [{
-	        key: "generateScale",
+	        key: 'generateScale',
 	        value: function generateScale() {
 	            this.vertices = [];
 	            this.indices = [];
@@ -603,7 +607,7 @@
 	            this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	        }
 	    }, {
-	        key: "draw",
+	        key: 'draw',
 	        value: function draw() {
 	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
 	            //这个地方要写在bind后,相当于获取并设置顶点数据
@@ -618,7 +622,7 @@
 	            this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
 	        }
 	    }, {
-	        key: "drawLabel",
+	        key: 'drawLabel',
 	        value: function drawLabel() {}
 	    }]);
 
@@ -627,6 +631,47 @@
 
 /***/ },
 /* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/23.
+	 *
+	 * 标尺上的刻度的绘制
+	 */
+
+	var SCLabel = exports.SCLabel = function () {
+	    function SCLabel(parentNode, labelList, styleStr) {
+	        _classCallCheck(this, SCLabel);
+
+	        this.canvas = document.createElement("canvas");
+	        this.ctx = this.canvas.getContext("2d");
+
+	        parentNode.appendChild(this.canvas);
+	    }
+
+	    _createClass(SCLabel, [{
+	        key: "draw",
+	        value: function draw(ctx) {
+	            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	            ctx.fillText(someMsg, pixelX, pixelY);
+	        }
+	    }]);
+
+	    return SCLabel;
+	}();
+
+/***/ },
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -690,22 +735,23 @@
 	}();
 
 /***/ },
-/* 7 */
-/***/ function(module, exports) {
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+	exports.SCDomElement = undefined;
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/21.
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+	var _Vector = __webpack_require__(9);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Created by grenlight on 16/3/21.
-	 */
 
 	var SCDomElement = exports.SCDomElement = function () {
 	    function SCDomElement(style) {
@@ -714,11 +760,15 @@
 	        _classCallCheck(this, SCDomElement);
 
 	        this.title = title;
+	        this.style = style;
 	        this.panel = this.createPanel(style);
 
 	        if (this.title) {
 	            this.createTitle(style);
 	        }
+	        this.leftLabels = [];
+	        this.leftLabelsTN = [];
+	        this.createLabels(style);
 	    }
 
 	    _createClass(SCDomElement, [{
@@ -726,6 +776,32 @@
 	        value: function createPanel(style) {
 	            var styleStr = 'position:relative;display:block; padding:0px; margin: 0px;  -webkit-tap-highlight-color:rgba(0, 0, 0, 0); -webkit-user-select: none; user-select: none; width:' + style.width + 'px; ' + 'height:' + style.height + 'px; color: ' + style.fontColor + '; background-color:' + style.backgroundColor;
 	            return this.createElement('div', styleStr);
+	        }
+	    }, {
+	        key: 'createLabels',
+	        value: function createLabels() {
+	            for (var i = 0; i < 7; i++) {
+	                var div = this.createElement('div', 'position:absolute; text-align:right; font-size: 12px; display:None;' + ' width: 100px; height20px');
+	                var textNode = document.createTextNode("");
+	                div.appendChild(textNode);
+	                this.panel.appendChild(div);
+	                this.leftLabels.push(div);
+	                this.leftLabelsTN.push(textNode);
+	            }
+	        }
+	    }, {
+	        key: 'showLabels',
+	        value: function showLabels(arr, mvMatrix) {
+	            for (var i = 0; i < arr.length; i++) {
+	                var div = this.leftLabels[i];
+	                var textNode = this.leftLabelsTN[i];
+	                var coord = _Vector.Vector3.applyMatrix4(arr[i].coord, mvMatrix);
+	                console.log('coord: ', coord);
+	                div.style.display = 'block';
+	                div.style.top = this.style.canvasHeight / 2 - coord[1] + 'px';
+	                div.style.left = this.style.canvasWidth / 2 - 100 - 30 + coord[0] + 'px';
+	                textNode.nodeValue = arr[i].label;
+	            }
 	        }
 	    }, {
 	        key: 'createTitle',
@@ -748,7 +824,49 @@
 	}();
 
 /***/ },
-/* 8 */
+/* 9 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/23.
+	 */
+
+	var Vector3 = exports.Vector3 = function () {
+	    function Vector3() {
+	        _classCallCheck(this, Vector3);
+	    }
+
+	    _createClass(Vector3, null, [{
+	        key: "applyMatrix4",
+	        value: function applyMatrix4(vec, m) {
+	            var x = vec[0];
+	            var y = vec[1];
+	            var z = vec[2];
+	            var w = 0;
+
+	            vec[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
+	            vec[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
+	            vec[2] = m[2] * x + m[6] * y + m[10] * z + m[14] * w;
+
+	            return vec;
+	        }
+	    }]);
+
+	    return Vector3;
+	}();
+
+/***/ },
+/* 10 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -765,7 +883,7 @@
 	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.6);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);\n}\n";
 
 /***/ },
-/* 9 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -780,7 +898,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _GLUtils = __webpack_require__(10);
+	var _GLUtils = __webpack_require__(12);
 
 	var GLUtils = _interopRequireWildcard(_GLUtils);
 
@@ -870,7 +988,7 @@
 	}();
 
 /***/ },
-/* 10 */
+/* 12 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -989,7 +1107,7 @@
 	}
 
 /***/ },
-/* 11 */
+/* 13 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1271,7 +1389,7 @@
 	}();
 
 /***/ },
-/* 12 */
+/* 14 */
 /***/ function(module, exports) {
 
 	"use strict";

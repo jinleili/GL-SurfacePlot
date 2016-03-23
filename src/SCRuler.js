@@ -3,6 +3,7 @@
  *
  * 管理图表上的标尺线及刻度
  */
+import  { SCLabel } from './SCLabel.js';
 
 export class SCRuler {
     constructor(gl, prg, dataSource) {

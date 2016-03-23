@@ -31,7 +31,8 @@ export class SurfaceChart {
         this.style.canvasHeight = this.renderer.canvasHeight;
         this.style.canvasWidth = this.renderer.canvasWidth;
 
-        this.domElement = (new SCDomElement(this.style, params.title)).panel;
+        this.domElementObj = new SCDomElement(this.style, params.title);
+        this.domElement = this.domElementObj.panel;
         this.domElement.appendChild(this.renderer.canvas);
 
         this.dataSource = new SCDataSource(dataArr, this.style);
@@ -52,8 +53,9 @@ export class SurfaceChart {
         this.surface  = new SCSurface(this.renderer.gl,  this.prg, this.dataSource);
         //标尺线
         this.ruler = new SCRuler(this.renderer.gl, this.prg, this.dataSource);
-
         this.draw();
+
+        this.domElementObj.showLabels(this.ruler.labelList, this.mvMatrix);
     }
 
     /**

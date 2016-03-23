@@ -1,20 +1,51 @@
 /**
  * Created by grenlight on 16/3/21.
  */
-    
+
+import {Vector3} from './webgl/math/Vector3.js';
+
 export class  SCDomElement {
     constructor(style, title = null) {
         this.title = title;
+        this.style = style;
         this.panel = this.createPanel(style);
       
         if (this.title) {
             this.createTitle(style);
         }
+        this.leftLabels = [];
+        this.leftLabelsTN = [];
+        this.createLabels(style);
     }
 
     createPanel(style) {
         let styleStr = 'position:relative;display:block; padding:0px; margin: 0px;  -webkit-tap-highlight-color:rgba(0, 0, 0, 0); -webkit-user-select: none; user-select: none; width:' + style.width + 'px; ' + 'height:' + style.height + 'px; color: ' + style.fontColor +'; background-color:'+ style.backgroundColor;
         return this.createElement('div', styleStr);
+    }
+
+    createLabels() {
+        for (let i=0; i<7; i++) {
+            let div = this.createElement('div', 'position:absolute; text-align:right; font-size: 12px; display:None;' +
+                ' width: 100px; height20px');
+            let textNode = document.createTextNode("");
+            div.appendChild(textNode);
+            this.panel.appendChild(div);
+            this.leftLabels.push(div);
+            this.leftLabelsTN.push(textNode);
+        }
+    }
+
+    showLabels(arr, mvMatrix) {
+        for (let i=0; i< arr.length; i++) {
+            let div = this.leftLabels[i];
+            let textNode = this.leftLabelsTN[i];
+            let coord = Vector3.applyMatrix4(arr[i].coord, mvMatrix);
+            console.log('coord: ', coord);
+            div.style.display = 'block';
+            div.style.top = this.style.canvasHeight/2 - coord[1] + 'px';
+            div.style.left = this.style.canvasWidth/2 - 100-30 +coord[0] + 'px';
+            textNode.nodeValue = arr[i].label;
+        }
     }
 
     createTitle(style) {
