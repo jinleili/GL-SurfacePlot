@@ -229,13 +229,13 @@
 	        this.simpleRow = 1;
 	        this.simpleCol = 1;
 
-	        var rowWidth = this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight;
-	        var colWidth = this.isNeedSwapRowCol ? this.drawHeight : this.drawWidth;
+	        var rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight) / 2;
+	        var colWidth = (this.isNeedSwapRowCol ? this.drawHeight : this.drawWidth) / 2;
 	        if (this.rowCount > rowWidth) {
-	            this.simpleRow = (this.rowCount / rowWidth).toFixed(2);
+	            this.simpleRow = Math.floor(this.rowCount / rowWidth);
 	        }
 	        if (this.colCount > colWidth) {
-	            this.simpleCol = (this.colCount / colWidth).toFixed(2);
+	            this.simpleCol = Math.floor(this.colCount / colWidth);
 	        }
 
 	        //参考线条数
@@ -288,12 +288,12 @@
 	        value: function _formatData(dataArr) {
 	            this.dataSource = [];
 
-	            for (var i = 0; i < this.rowCount; i++) {
-	                var rowArr = dataArr[i];
+	            for (var i = 0; i < this.rowCount; i += this.simpleRow) {
+	                var rowArr = dataArr[Math.floor(i)];
 	                var newRowArr = [];
 
-	                for (var j = 0; j < this.colCount; j++) {
-	                    var value = parseFloat(rowArr[j]);
+	                for (var j = 0; j < this.colCount; j += this.simpleCol) {
+	                    var value = parseFloat(rowArr[Math.floor(j)]);
 	                    this._validateDataType(value);
 	                    if (value < this.minValue) {
 	                        this.minValue = value;
@@ -304,6 +304,10 @@
 	                }
 	                this.dataSource.push(newRowArr);
 	            }
+	            //更新行列
+	            this.rowCount = this.dataSource.length;
+	            this.colCount = this.dataSource[0].length;
+	            console.log('new rows: ', this.rowCount, this.colCount);
 
 	            this.colGap = this.drawWidth / (this._getColCount() - 1);
 	            if (this.colGap < 1.0) {
@@ -346,14 +350,14 @@
 	            this.zFar = -(this.colGap * this.rowCount / 2);
 	            //初始值给正, 避免后面赋值时的条件判断
 	            var z = this.zFar - this.colGap;
-	            for (var i = 0; i < this.rowCount; i += this.simpleRow) {
+	            for (var i = 0; i < this.rowCount; i++) {
 	                z += this.colGap;
 
 	                var x = -(this.drawWidth / 2.0) - this.colGap;
-	                var rowData = this.dataSource[Math.floor(i)];
-	                for (var j = 0; j < this.colCount; j += this.simpleCol) {
+	                var rowData = this.dataSource[i];
+	                for (var j = 0; j < this.colCount; j++) {
 	                    x += this.colGap;
-	                    var yValue = rowData[Math.floor(j)];
+	                    var yValue = rowData[i];
 	                    if (typeof yValue !== 'number') {
 	                        console.log("invalid data: ", i, j, rowData);
 	                    }
@@ -521,7 +525,6 @@
 
 	        this.gl = gl;
 	        this.prg = prg;
-	        this.dataSource = dataSource;
 
 	        this.vertices = dataSource.vertices;
 	        this.colorList = dataSource.colors;
@@ -531,25 +534,69 @@
 	        // this.indices = [0, 1, 2];
 	        // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];
 	        this.vetexBuffer = gl.createArrayBufferWithData(this.vertices);
-	        this.indexBuffer = gl.createElementBufferWithData(this.indices);
 	        this.colorBuffer = gl.createArrayBufferWithData(this.colorList);
 
-	        this.updateBufferData();
+	        this.indexBufferList = [];
+	        var boundary = 65535;
+	        var maxLength = dataSource.indices.length;
+	        var count = Math.ceil(maxLength / boundary);
+	        for (var i = 0; i < count; i++) {
+	            var lower = i * boundary;
+	            var uper = lower + boundary + 1;
+	            if (uper > maxLength + 1) {
+	                uper = maxLength + 1;
+	            }
+	            var indices = dataSource.indices.slice(lower, uper);
+	            var indexBuffer = gl.createElementBufferWithData(indices);
+	            this.indexBufferList.push({ buffer: indexBuffer, length: uper - lower - 1 });
+	            console.log(maxLength, boundary, count, uper);
+	        }
 	    }
 
 	    _createClass(SCSurface, [{
-	        key: "updateBufferData",
-	        value: function updateBufferData() {
-	            // this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
-	            // this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
-	            //
-	            // this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
-	            // this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.colorList), this.gl.STATIC_DRAW);
+	        key: "draw",
+	        value: function draw() {
+	            var _this = this;
 
-	            // this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-	            // this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
+	            this.gl.enableVertexAttribArray(this.prg.vertexPosition);
+	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
+	            //这个地方要写在bind后,相当于获取并设置顶点数据
+	            this.gl.vertexAttribPointer(this.prg.vertexPosition, 3, this.gl.FLOAT, false, 0, 0);
+
+	            this.gl.enableVertexAttribArray(this.prg.vertexColor);
+	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
+	            this.gl.vertexAttribPointer(this.prg.vertexColor, 3, this.gl.FLOAT, false, 0, 0);
+
+	            this.indexBufferList.forEach(function (indexBufferObj) {
+	                _this.gl.bindBuffer(_this.gl.ELEMENT_ARRAY_BUFFER, indexBufferObj.buffer);
+	                _this.gl.drawElements(_this.gl.TRIANGLES, indexBufferObj.length, _this.gl.UNSIGNED_SHORT, 0);
+	            });
 	        }
-	    }, {
+	    }]);
+
+	    return SCSurface;
+	}();
+
+	var SubSurface = function () {
+	    function SubSurface(gl, prg, vertices, colorList, indices) {
+	        _classCallCheck(this, SubSurface);
+
+	        this.gl = gl;
+	        this.prg = prg;
+
+	        this.vertices = vertices;
+	        this.colorList = colorList;
+	        this.indices = indices;
+	        // console.log(this.vertices, this.colorList, this.indices);
+	        // this.vertices = [-25,0.0, 0.0,  25, 0.0, 0.0,  25, 50, 0.0];
+	        // this.indices = [0, 1, 2];
+	        // this.colorList = [1.0, 0.0, 0.0,  1.0, 0.0, 0.0,   1.0, 0.0, 0.0];
+	        this.vetexBuffer = gl.createArrayBufferWithData(this.vertices);
+	        this.indexBuffer = gl.createElementBufferWithData(this.indices);
+	        this.colorBuffer = gl.createArrayBufferWithData(this.colorList);
+	    }
+
+	    _createClass(SubSurface, [{
 	        key: "draw",
 	        value: function draw() {
 	            this.gl.enableVertexAttribArray(this.prg.vertexPosition);
@@ -566,7 +613,7 @@
 	        }
 	    }]);
 
-	    return SCSurface;
+	    return SubSurface;
 	}();
 
 /***/ },
