@@ -59,6 +59,7 @@ export class WebGLRenderer {
         for (var i = 0; i < names.length; ++i) {
             context = this.canvas.getContext(names[i], {
                 // premultipliedAlpha: false  // Ask for non-premultiplied alpha
+                antialias:true
             });
             if (context) {
                 break;

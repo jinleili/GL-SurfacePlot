@@ -46,15 +46,13 @@ export class  SCDomElement {
             let div = this.leftLabels[i];
             let textNode = this.leftLabelsTN[i];
             let coord = arr[i].coord;
-            console.log('coord0: ', coord);
+
+            //将透视空间的坐标转换成实际屏幕坐标
             Vector3.applyMatrix4(coord, matrix);
-            console.log('coord1: ',  coord);
-            div.style.display = 'block';
-            // div.style.top = this.style.canvasHeight/2 - coord[1] + 'px';
-            // div.style.left = this.style.canvasWidth/2 - 100-30 +coord[0] + 'px';
             div.style.top = (1-coord[1]) * this.style.height/2 + 'px';
             div.style.left = (1+coord[0]) * this.style.width/2 - 110 + 'px';
             textNode.nodeValue = arr[i].label;
+            div.style.display = 'block';
         }
     }
 

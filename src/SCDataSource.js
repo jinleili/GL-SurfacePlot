@@ -15,6 +15,12 @@ export class  SCDataSource {
         this.colCount = dataArr[0].length;
         this._validateRowAndCol(this.colCount);
 
+        // 使图形呈现横向展开的状态
+        this.isNeedSwapRowCol = false;
+        if (this.rowCount > this.colCount) {
+            this.isNeedSwapRowCol = true;
+        }
+
         //参考线条数
         this.referenceLineCount = 6;
         //y 轴上的标尺数据集

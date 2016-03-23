@@ -116,8 +116,15 @@
 	        this.mvMatrix = _Matrix.Matrix4.identity();
 	        var offsetZ = -this.style.canvasHeight + this.dataSource.zFar * 2.5;
 	        _Matrix.Matrix4.translate(this.mvMatrix, [30, 0.0, offsetZ]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.35, [1, 0, 0]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, -30 / 180 * Math.PI, [0, 1, 0]);
+
+	        var rotateY = -20,
+	            rotateX = 20;
+	        if (this.dataSource.isNeedSwapRowCol) {
+	            rotateY = 90 - 30;
+	            // rotateX *= -1;
+	        }
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateX / 180 * Math.PI, [1, 0, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateY / 180 * Math.PI, [0, 1, 0]);
 
 	        //构建一个与图表坐标系一致的投影矩阵
 	        // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
@@ -167,6 +174,8 @@
 	            var color = this.style.rgbBackgroundColor;
 	            this.gl.clearColor(color[0], color[1], color[2], 1.0);
 
+	            // this.gl.enable(this.gl.DEPTH_TEST);
+	            // this.gl.depthFunc(this.gl.LEQUAL);
 	            //透明度混合
 	            this.gl.enable(this.gl.BLEND);
 	            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
@@ -212,6 +221,12 @@
 	        this._validateRowAndCol(this.rowCount);
 	        this.colCount = dataArr[0].length;
 	        this._validateRowAndCol(this.colCount);
+
+	        // 使图形呈现横向展开的状态
+	        this.isNeedSwapRowCol = false;
+	        if (this.rowCount > this.colCount) {
+	            this.isNeedSwapRowCol = true;
+	        }
 
 	        //参考线条数
 	        this.referenceLineCount = 6;
@@ -576,11 +591,9 @@
 	            this.indices = [];
 	            this.colors = [];
 	            this.labelList = [];
-	            var halfLineWidth = 1.0;
 	            var x = this.dataSource.scaleStartX;
 	            var maxZ = this.dataSource.zFar;
 	            var offset = 0;
-	            var color = this.dataSource.style.rgbFontColor;
 	            var y = void 0,
 	                bottom = void 0,
 	                top = void 0,
@@ -588,23 +601,41 @@
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
 	                var label = this.dataSource.scaleLabels[i];
 	                y = (label - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
-	                bottom = [x, y, -maxZ];
-	                top = [x, y, maxZ];
-	                topRight = [-x, y, maxZ];
+	                if (this.dataSource.isNeedSwapRowCol) {
+	                    bottom = [x, y, maxZ];
+	                    top = [-x, y, maxZ];
+	                    topRight = [-x, y, -maxZ];
+	                } else {
+	                    bottom = [x, y, -maxZ];
+	                    top = [x, y, maxZ];
+	                    topRight = [-x, y, maxZ];
+	                }
 
 	                this.labelList.push({ coord: bottom, label: label });
-	                this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
-	                this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
 	                offset = i * 6;
-	                this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
+	                this._concatVertices(bottom, top, topRight, offset);
 	            }
-	            //底部刻度
-	            bottom = [-x, y, maxZ];
-	            top = [-x, y, -maxZ];
-	            topRight = [x, y, -maxZ];
+	            //底部刻度线
+	            if (this.dataSource.isNeedSwapRowCol) {
+	                bottom = [-x, y, -maxZ];
+	                top = [x, y, -maxZ];
+	                topRight = [x, y, maxZ];
+	            } else {
+	                bottom = [-x, y, maxZ];
+	                top = [-x, y, -maxZ];
+	                topRight = [x, y, -maxZ];
+	            }
+
+	            offset += 6;
+	            this._concatVertices(bottom, top, topRight, offset);
+	        }
+	    }, {
+	        key: '_concatVertices',
+	        value: function _concatVertices(bottom, top, topRight, offset) {
+	            var color = this.dataSource.style.rgbFontColor;
+	            var halfLineWidth = 1.0;
 	            this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
 	            this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
-	            offset += 6;
 	            this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	        }
 	    }, {
@@ -805,15 +836,13 @@
 	                var div = this.leftLabels[i];
 	                var textNode = this.leftLabelsTN[i];
 	                var coord = arr[i].coord;
-	                console.log('coord0: ', coord);
+
+	                //将透视空间的坐标转换成实际屏幕坐标
 	                _Vector.Vector3.applyMatrix4(coord, matrix);
-	                console.log('coord1: ', coord);
-	                div.style.display = 'block';
-	                // div.style.top = this.style.canvasHeight/2 - coord[1] + 'px';
-	                // div.style.left = this.style.canvasWidth/2 - 100-30 +coord[0] + 'px';
 	                div.style.top = (1 - coord[1]) * this.style.height / 2 + 'px';
 	                div.style.left = (1 + coord[0]) * this.style.width / 2 - 110 + 'px';
 	                textNode.nodeValue = arr[i].label;
+	                div.style.display = 'block';
 	            }
 	        }
 	    }, {
@@ -898,7 +927,7 @@
 
 	var pixelVS = exports.pixelVS = "\nattribute vec3 vertexPosition;\nattribute vec3 vertexColor;\n\nuniform mat4 mvMatrix;\nuniform mat4 pMatrix;\n\nvarying vec3 color;\n\nvoid main(void) {\n  color = vertexColor;\n  gl_Position = pMatrix * mvMatrix * vec4(vertexPosition, 1.0);\n}\n";
 
-	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.6);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.6);\n}\n";
+	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.8);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.8);\n}\n";
 
 /***/ },
 /* 11 */
@@ -993,6 +1022,7 @@
 	            for (var i = 0; i < names.length; ++i) {
 	                context = this.canvas.getContext(names[i], {
 	                    // premultipliedAlpha: false  // Ask for non-premultiplied alpha
+	                    antialias: true
 	                });
 	                if (context) {
 	                    break;

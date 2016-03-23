@@ -67,6 +67,8 @@
    var container = document.getElementById('surfaceChart_Container');
 
    request('./data0.txt', 28, function(arr) {
+//       request('./data2.txt', 20, function(arr) {
+
 //   request('./data3.txt', 15665, function(arr) {
 
            // 下边 "可选参数" 的意思是指: 如果不想指定这个字段的信息, 就在 params 里删除这个字段
@@ -78,12 +80,13 @@
            backgroundColor: '#353535', // 可选参数, 图表背景颜色, 默认为 0x353535
            surfaceColors:  ['0x215c91',  '0x70af48', '0x3769bd', '0xfec536', '0xa5a5a5', '0xf27934', '0x6aa3d9'] // 可选参数, 曲面顶点颜色,如果要指定, 数组长度至少为 7 位.
        };
+           console.log('rowCount:--', arr.length);
        // 生成图表实例
        var chart = new SurfaceChart(arr, params);
        // 将曲面图显示到网页
        container.appendChild(chart.domElement);
 
-       addAnotherChart();
+//       addAnotherChart();
    });
 
    function addAnotherChart() {

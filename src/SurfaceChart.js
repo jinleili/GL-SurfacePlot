@@ -11,7 +11,6 @@ import { SCDomElement } from './SCDomElement.js';
 import { pixelVS, pixelFS } from './webgl/shaders/shaders.js';
 import { WebGLRenderer } from './webgl/WebGLRenderer.js';
 import { Matrix4 } from './webgl/math/Matrix4.js';
-import { Vector3 } from './webgl/math/Vector3.js';
 
 export class SurfaceChart {
     constructor(dataArr,  params) {
@@ -40,8 +39,14 @@ export class SurfaceChart {
         this.mvMatrix = Matrix4.identity();
         let offsetZ = -this.style.canvasHeight+this.dataSource.zFar*2.5;
         Matrix4.translate(this.mvMatrix, [30,  0.0, offsetZ]);
-        Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.35, [1, 0, 0]);
-        Matrix4.rotate(this.mvMatrix, this.mvMatrix, -30/180*Math.PI, [0, 1, 0]);
+
+        let rotateY = -20, rotateX = 20;
+        if (this.dataSource.isNeedSwapRowCol) {
+            rotateY = 90 - 20;
+            // rotateX *= -1;
+        }
+        Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateX/180*Math.PI, [1, 0, 0]);
+        Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateY/180*Math.PI, [0, 1, 0]);
 
         //构建一个与图表坐标系一致的投影矩阵
         // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
@@ -84,6 +89,8 @@ export class SurfaceChart {
         let color = this.style.rgbBackgroundColor;
         this.gl.clearColor(color[0], color[1], color[2], 1.0);
 
+        // this.gl.enable(this.gl.DEPTH_TEST);
+        // this.gl.depthFunc(this.gl.LEQUAL);
         //透明度混合
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
