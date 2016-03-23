@@ -11,7 +11,7 @@ import { SCDomElement } from './SCDomElement.js';
 import { pixelVS, pixelFS } from './webgl/shaders/shaders.js';
 import { WebGLRenderer } from './webgl/WebGLRenderer.js';
 import { Matrix4 } from './webgl/math/Matrix4.js';
-import { Vector4 } from './webgl/math/Vector4.js';
+import { Vector3 } from './webgl/math/Vector3.js';
 
 export class SurfaceChart {
     constructor(dataArr,  params) {
@@ -55,7 +55,8 @@ export class SurfaceChart {
         this.ruler = new SCRuler(this.renderer.gl, this.prg, this.dataSource);
         this.draw();
 
-        this.domElementObj.showLabels(this.ruler.labelList, this.mvMatrix);
+        let finalMatrix = Matrix4.multiplyMatrices(this.pMatrix, this.mvMatrix);
+        this.domElementObj.showLabels(this.ruler.labelList, finalMatrix);
     }
 
     /**

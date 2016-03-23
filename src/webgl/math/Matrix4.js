@@ -215,6 +215,7 @@ export class Matrix4 {
         return out;
     }
 
+    // 适用左乘规则
     static multiplyMatrices( a, b ) {
         var out = Matrix4.identity();
 

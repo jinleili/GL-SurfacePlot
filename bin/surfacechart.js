@@ -83,7 +83,7 @@
 
 	var _Matrix = __webpack_require__(13);
 
-	var _Vector = __webpack_require__(14);
+	var _Vector = __webpack_require__(9);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -131,7 +131,8 @@
 	        this.ruler = new _SCRuler.SCRuler(this.renderer.gl, this.prg, this.dataSource);
 	        this.draw();
 
-	        this.domElementObj.showLabels(this.ruler.labelList, this.mvMatrix);
+	        var finalMatrix = _Matrix.Matrix4.multiplyMatrices(this.pMatrix, this.mvMatrix);
+	        this.domElementObj.showLabels(this.ruler.labelList, finalMatrix);
 	    }
 
 	    /**
@@ -789,17 +790,29 @@
 	                this.leftLabelsTN.push(textNode);
 	            }
 	        }
+
+	        /**
+	         * 将标尺刻度显示到屏幕
+	         *
+	         * @param {array} arr
+	         * @param {Matrix4} matrix
+	         */
+
 	    }, {
 	        key: 'showLabels',
-	        value: function showLabels(arr, mvMatrix) {
+	        value: function showLabels(arr, matrix) {
 	            for (var i = 0; i < arr.length; i++) {
 	                var div = this.leftLabels[i];
 	                var textNode = this.leftLabelsTN[i];
-	                var coord = _Vector.Vector3.applyMatrix4(arr[i].coord, mvMatrix);
-	                console.log('coord: ', coord);
+	                var coord = arr[i].coord;
+	                console.log('coord0: ', coord);
+	                _Vector.Vector3.applyMatrix4(coord, matrix);
+	                console.log('coord1: ', coord);
 	                div.style.display = 'block';
-	                div.style.top = this.style.canvasHeight / 2 - coord[1] + 'px';
-	                div.style.left = this.style.canvasWidth / 2 - 100 - 30 + coord[0] + 'px';
+	                // div.style.top = this.style.canvasHeight/2 - coord[1] + 'px';
+	                // div.style.left = this.style.canvasWidth/2 - 100-30 +coord[0] + 'px';
+	                div.style.top = (1 - coord[1]) * this.style.height / 2 + 'px';
+	                div.style.left = (1 + coord[0]) * this.style.width / 2 - 110 + 'px';
 	                textNode.nodeValue = arr[i].label;
 	            }
 	        }
@@ -848,17 +861,22 @@
 
 	    _createClass(Vector3, null, [{
 	        key: "applyMatrix4",
-	        value: function applyMatrix4(vec, m) {
-	            var x = vec[0];
-	            var y = vec[1];
-	            var z = vec[2];
-	            var w = 0;
+	        value: function applyMatrix4(out, m) {
+	            var x = out[0];
+	            var y = out[1];
+	            var z = out[2];
+	            var w = 1;
 
-	            vec[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
-	            vec[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
-	            vec[2] = m[2] * x + m[6] * y + m[10] * z + m[14] * w;
+	            out[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
+	            out[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
+	            out[2] = m[2] * x + m[6] * y + m[10] * z + m[14] * w;
+	            var scale = m[3] * x + m[7] * y + m[11] * z + m[15] * w;
 
-	            return vec;
+	            out[0] = out[0] / scale;
+	            out[1] = out[1] / scale;
+	            out[2] = out[2] / scale;
+
+	            return out;
 	        }
 	    }]);
 
@@ -1383,54 +1401,73 @@
 	            }
 	            return out;
 	        }
-	    }]);
 
-	    return Matrix4;
-	}();
+	        // 适用左乘规则
 
-/***/ },
-/* 14 */
-/***/ function(module, exports) {
+	    }, {
+	        key: "multiplyMatrices",
+	        value: function multiplyMatrices(a, b) {
+	            var out = Matrix4.identity();
 
-	"use strict";
+	            var a11 = a[0],
+	                a12 = a[4],
+	                a13 = a[8],
+	                a14 = a[12];
+	            var a21 = a[1],
+	                a22 = a[5],
+	                a23 = a[9],
+	                a24 = a[13];
+	            var a31 = a[2],
+	                a32 = a[6],
+	                a33 = a[10],
+	                a34 = a[14];
+	            var a41 = a[3],
+	                a42 = a[7],
+	                a43 = a[11],
+	                a44 = a[15];
 
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
+	            var b11 = b[0],
+	                b12 = b[4],
+	                b13 = b[8],
+	                b14 = b[12];
+	            var b21 = b[1],
+	                b22 = b[5],
+	                b23 = b[9],
+	                b24 = b[13];
+	            var b31 = b[2],
+	                b32 = b[6],
+	                b33 = b[10],
+	                b34 = b[14];
+	            var b41 = b[3],
+	                b42 = b[7],
+	                b43 = b[11],
+	                b44 = b[15];
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	            out[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+	            out[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+	            out[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+	            out[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
 
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	            out[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+	            out[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+	            out[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+	            out[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
 
-	/**
-	 * Created by grenlight on 16/3/22.
-	 */
+	            out[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+	            out[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+	            out[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+	            out[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
 
-	var Vector4 = exports.Vector4 = function () {
-	    function Vector4() {
-	        _classCallCheck(this, Vector4);
-	    }
+	            out[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+	            out[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+	            out[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+	            out[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
 
-	    _createClass(Vector4, null, [{
-	        key: "applyMatrix4",
-	        value: function applyMatrix4(vec, m) {
-	            var x = vec[0];
-	            var y = vec[1];
-	            var z = vec[2];
-	            var w = vec[3];
-
-	            var e = m;
-
-	            vec[0] = e[0] * x + e[4] * y + e[8] * z + e[12] * w;
-	            vec[1] = e[1] * x + e[5] * y + e[9] * z + e[13] * w;
-	            vec[2] = e[2] * x + e[6] * y + e[10] * z + e[14] * w;
-	            vec[3] = e[3] * x + e[7] * y + e[11] * z + e[15] * w;
-
-	            return vec;
+	            return out;
 	        }
 	    }]);
 
-	    return Vector4;
+	    return Matrix4;
 	}();
 
 /***/ }
