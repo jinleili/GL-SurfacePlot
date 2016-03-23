@@ -13,7 +13,7 @@ export class Object3D {
     this.renderer = null;
 
     this.position = GLPoint.zero();
-    this.scale = new GLPoint(1, 1);
+    this.ruler = new GLPoint(1, 1);
     this.rotate = GLPoint.zero();
 
     this.matrix = Matrix4.identity();
@@ -53,9 +53,9 @@ export class Object3D {
     this.distanceX = x * this.devicePixelRatio - this.renderer.centerX;
     this.distanceY = this.renderer.centerY - y * this.devicePixelRatio;
     Matrix4.translate(this.matrix, [this.distanceX, this.distanceY, 0]);
-    this.scale.x += stepScale;
-    this.scale.y += stepScale;
-    Matrix4.scale(this.matrix, [this.scale.x, this.scale.y, 1]);
+    this.ruler.x += stepScale;
+    this.ruler.y += stepScale;
+    Matrix4.ruler(this.matrix, [this.ruler.x, this.ruler.y, 1]);
   }
 
   /**
@@ -72,7 +72,7 @@ export class Object3D {
       this.targetPosition = p.swapToModelPosition(this.devicePixelRatio, this.sceneWidthHalf, this.sceneHeightHalf);
     }
 
-    let scale = params.scale;
+    let scale = params.ruler;
     if (scale) {
       this.needsUpdateScale = true;
       this.targetScale = scale;
@@ -95,9 +95,9 @@ export class Object3D {
     }
 
     if (this.needsUpdateScale) {
-      this.scale.x += (this.targetScale.x - this.scale.x) * this.speed;
-      this.scale.y += (this.targetScale.y - this.scale.y) * this.speed;
-      Matrix4.scale(this.matrix, [this.scale.x, this.scale.y, 1]);
+      this.ruler.x += (this.targetScale.x - this.ruler.x) * this.speed;
+      this.ruler.y += (this.targetScale.y - this.ruler.y) * this.speed;
+      Matrix4.ruler(this.matrix, [this.ruler.x, this.ruler.y, 1]);
     }
 
   }

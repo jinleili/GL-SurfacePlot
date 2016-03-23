@@ -4,7 +4,7 @@
 
 import { SCDataSource } from './SCDataSource.js';
 import { SCSurface } from './SCSurface.js';
-import { SCScale } from './SCScale.js';
+import { SCRuler } from './SCRuler.js';
 import { SCStyle } from './SCStyle.js';
 import { SCDomElement } from './SCDomElement.js';
 
@@ -37,21 +37,21 @@ export class SurfaceChart {
         this.dataSource = new SCDataSource(dataArr, this.style);
 
         this.mvMatrix = Matrix4.identity();
-        let offsetZ = -this.style.canvasHeight+this.dataSource.zFar;
-        Matrix4.translate(this.mvMatrix, [0.0,  50, offsetZ]);
+        let offsetZ = -this.style.canvasHeight+this.dataSource.zFar*2.5;
+        Matrix4.translate(this.mvMatrix, [30,  0.0, offsetZ]);
         Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.35, [1, 0, 0]);
-        Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.4, [0, 1, 0]);
+        Matrix4.rotate(this.mvMatrix, this.mvMatrix, -30/180*Math.PI, [0, 1, 0]);
 
         //构建一个与图表坐标系一致的投影矩阵
         // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
-        this.pMatrix = Matrix4.perspective(60/180*Math.PI, this.style.canvasWidth/ this.style.canvasHeight, 0.1, 50000);
+        this.pMatrix = Matrix4.perspective(45/180*Math.PI, this.style.canvasWidth/ this.style.canvasHeight, 0.1, 50000);
 
         this.initProgram();
 
         //曲面绘制类
         this.surface  = new SCSurface(this.renderer.gl,  this.prg, this.dataSource);
-        //标尺
-        this.scale = new SCScale(this.renderer.gl, this.prg, this.dataSource);
+        //标尺线
+        this.ruler = new SCRuler(this.renderer.gl, this.prg, this.dataSource);
 
         this.draw();
     }
@@ -85,7 +85,7 @@ export class SurfaceChart {
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
-        this.scale.draw();
+        this.ruler.draw();
         this.surface.draw();
     }
 

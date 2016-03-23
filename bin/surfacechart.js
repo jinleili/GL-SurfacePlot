@@ -71,7 +71,7 @@
 
 	var _SCSurface = __webpack_require__(4);
 
-	var _SCScale = __webpack_require__(5);
+	var _SCRuler = __webpack_require__(5);
 
 	var _SCStyle = __webpack_require__(6);
 
@@ -113,21 +113,21 @@
 	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.style);
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
-	        var offsetZ = -this.style.canvasHeight + this.dataSource.zFar;
-	        _Matrix.Matrix4.translate(this.mvMatrix, [0.0, 50, offsetZ]);
+	        var offsetZ = -this.style.canvasHeight + this.dataSource.zFar * 2.5;
+	        _Matrix.Matrix4.translate(this.mvMatrix, [30, 0.0, offsetZ]);
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, 0.35, [1, 0, 0]);
-	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, -0.4, [0, 1, 0]);
+	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, -30 / 180 * Math.PI, [0, 1, 0]);
 
 	        //构建一个与图表坐标系一致的投影矩阵
 	        // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
-	        this.pMatrix = _Matrix.Matrix4.perspective(60 / 180 * Math.PI, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
+	        this.pMatrix = _Matrix.Matrix4.perspective(45 / 180 * Math.PI, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
 
 	        this.initProgram();
 
 	        //曲面绘制类
 	        this.surface = new _SCSurface.SCSurface(this.renderer.gl, this.prg, this.dataSource);
-	        //标尺
-	        this.scale = new _SCScale.SCScale(this.renderer.gl, this.prg, this.dataSource);
+	        //标尺线
+	        this.ruler = new _SCRuler.SCRuler(this.renderer.gl, this.prg, this.dataSource);
 
 	        this.draw();
 	    }
@@ -168,7 +168,7 @@
 	            this.gl.enable(this.gl.BLEND);
 	            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
-	            this.scale.draw();
+	            this.ruler.draw();
 	            this.surface.draw();
 	        }
 	    }]);
@@ -539,12 +539,12 @@
 	/**
 	 * Created by grenlight on 16/3/21.
 	 *
-	 * 管理图表上的标尺
+	 * 管理图表上的标尺线及刻度
 	 */
 
-	var SCScale = exports.SCScale = function () {
-	    function SCScale(gl, prg, dataSource) {
-	        _classCallCheck(this, SCScale);
+	var SCRuler = exports.SCRuler = function () {
+	    function SCRuler(gl, prg, dataSource) {
+	        _classCallCheck(this, SCRuler);
 
 	        this.gl = gl;
 	        this.prg = prg;
@@ -564,12 +564,13 @@
 	     */
 
 
-	    _createClass(SCScale, [{
+	    _createClass(SCRuler, [{
 	        key: "generateScale",
 	        value: function generateScale() {
 	            this.vertices = [];
 	            this.indices = [];
 	            this.colors = [];
+	            this.labelList = [];
 	            var halfLineWidth = 1.0;
 	            var x = this.dataSource.scaleStartX;
 	            var maxZ = this.dataSource.zFar;
@@ -580,10 +581,13 @@
 	                top = void 0,
 	                topRight = void 0;
 	            for (var i = 0; i < this.dataSource.scaleLabels.length; i++) {
-	                y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
+	                var label = this.dataSource.scaleLabels[i];
+	                y = (label - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
 	                bottom = [x, y, -maxZ];
 	                top = [x, y, maxZ];
 	                topRight = [-x, y, maxZ];
+
+	                this.labelList.push({ coord: bottom, label: label });
 	                this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
 	                this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
 	                offset = i * 6;
@@ -613,9 +617,12 @@
 	            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 	            this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
 	        }
+	    }, {
+	        key: "drawLabel",
+	        value: function drawLabel() {}
 	    }]);
 
-	    return SCScale;
+	    return SCRuler;
 	}();
 
 /***/ },

@@ -50,7 +50,7 @@ export class Box2 extends Geometry {
     Matrix4.translate(this.baseMVMatrix, [0.0, 0.0, 0.0]);
 
     //缩放成想要的状态
-    Matrix4.scale(this.baseMVMatrix, [width, this.windowHeight, 1]);
+    Matrix4.ruler(this.baseMVMatrix, [width, this.windowHeight, 1]);
 
     // 平移到X,Y轴向上的正确位置
     Matrix4.translate(this.baseMVMatrix, [(offsetX * 2 + 1) - this.windowWidth / width, 2, 0]);

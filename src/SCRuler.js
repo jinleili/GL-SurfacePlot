@@ -1,10 +1,10 @@
 /**
  * Created by grenlight on 16/3/21.
  *
- * 管理图表上的标尺
+ * 管理图表上的标尺线及刻度
  */
 
-export class SCScale {
+export class SCRuler {
     constructor(gl, prg, dataSource) {
         this.gl = gl;
         this.prg = prg;
@@ -26,6 +26,7 @@ export class SCScale {
         this.vertices = [];
         this.indices = [];
         this.colors = [];
+        this.labelList = [];
         let halfLineWidth = 1.0;
         let x = this.dataSource.scaleStartX;
         let maxZ = this.dataSource.zFar;
@@ -33,10 +34,13 @@ export class SCScale {
         let color = this.dataSource.style.rgbFontColor;
         let y, bottom, top, topRight;
         for (let i=0; i<this.dataSource.scaleLabels.length; i++) {
-            y = (this.dataSource.scaleLabels[i] - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
+            let label = this.dataSource.scaleLabels[i];
+            y = (label - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
             bottom = [x, y,  -maxZ];
             top = [x, y,  maxZ];
             topRight = [-x, y, maxZ];
+
+            this.labelList.push({coord:bottom, label:label});
             this.vertices.push( bottom[0], bottom[1]+halfLineWidth, bottom[2],
                 bottom[0], bottom[1]-halfLineWidth, bottom[2],
                 top[0], top[1]+halfLineWidth, top[2],
@@ -82,4 +86,9 @@ export class SCScale {
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
     }
+
+    drawLabel() {
+        
+    }
+
 }
