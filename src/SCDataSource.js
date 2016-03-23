@@ -20,6 +20,18 @@ export class  SCDataSource {
         if (this.rowCount > this.colCount) {
             this.isNeedSwapRowCol = true;
         }
+        // 数据采样: 如果数据的行或列数超出了绘制区宽高,则按绘制区宽高值采样行列数据
+        this.simpleRow = 1;
+        this.simpleCol = 1;
+
+        let rowWidth = this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight;
+        let colWidth = this.isNeedSwapRowCol ?  this.drawHeight : this.drawWidth ;
+        if (this.rowCount > rowWidth) {
+            this.simpleRow = ( this.rowCount / rowWidth).toFixed(2);
+        }
+        if (this.colCount > colWidth) {
+            this.simpleCol = (this.colCount / colWidth).toFixed(2);
+        }
 
         //参考线条数
         this.referenceLineCount = 6;
@@ -81,12 +93,29 @@ export class  SCDataSource {
             this.dataSource.push(newRowArr);
         }
         
-        this.colGap  = (this.drawWidth)/(this.colCount-1);
+        this.colGap  = (this.drawWidth)/(this._getColCount()-1);
+        if (this.colGap < 1.0) {
+            this.colGap = 1.0;
+        }
 
         //生成刻度集合
         this._calculateScaleLabel();
         //转换数据点为屏幕顶点坐标
         this._generateVertices();
+    }
+
+    _getRowCount() {
+        if (this.isNeedSwapRowCol) {
+            return this.colCount;
+        }
+        return this.rowCount;
+    }
+
+    _getColCount() {
+        if (this.isNeedSwapRowCol) {
+            return this.rowCount;
+        }
+        return this.colCount;
     }
 
     /**
@@ -100,20 +129,20 @@ export class  SCDataSource {
         this.zFar = -(this.colGap*this.rowCount/2);
         //初始值给正, 避免后面赋值时的条件判断
         let z = this.zFar - this.colGap;
-        for (let i=0; i<this.rowCount; i++) {
+        for (let i=0; i<this.rowCount; i+=this.simpleRow) {
             z += this.colGap;
 
             let x =-(this.drawWidth/2.0) -this.colGap;
-            let rowData = this.dataSource[i];
-            for (let j=0; j<this.colCount; j++) {
+            let rowData = this.dataSource[Math.floor(i)];
+            for (let j=0; j<this.colCount; j+=this.simpleCol) {
                 x += this.colGap;
-                let yValue = rowData[j] ;
+                let yValue = rowData[Math.floor(j)] ;
                 if (typeof(yValue) !== 'number') {
                     console.log("invalid data: ", i, j, rowData);
                 }
                 this.vertices.push(x, (yValue - this.scaleCenterY) * this.dataScale, z);
 
-                let color = this._calculateVertexColor(yValue)
+                let color = this._calculateVertexColor(yValue);
                 this.colors.push(color[0], color[1], color[2]);
             }
         }

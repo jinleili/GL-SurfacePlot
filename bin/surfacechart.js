@@ -83,8 +83,6 @@
 
 	var _Matrix = __webpack_require__(13);
 
-	var _Vector = __webpack_require__(9);
-
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var SurfaceChart = exports.SurfaceChart = function () {
@@ -120,7 +118,7 @@
 	        var rotateY = -20,
 	            rotateX = 20;
 	        if (this.dataSource.isNeedSwapRowCol) {
-	            rotateY = 90 - 30;
+	            rotateY = 90 - 20;
 	            // rotateX *= -1;
 	        }
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateX / 180 * Math.PI, [1, 0, 0]);
@@ -227,6 +225,18 @@
 	        if (this.rowCount > this.colCount) {
 	            this.isNeedSwapRowCol = true;
 	        }
+	        // 数据采样: 如果数据的行或列数超出了绘制区宽高,则按绘制区宽高值采样行列数据
+	        this.simpleRow = 1;
+	        this.simpleCol = 1;
+
+	        var rowWidth = this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight;
+	        var colWidth = this.isNeedSwapRowCol ? this.drawHeight : this.drawWidth;
+	        if (this.rowCount > rowWidth) {
+	            this.simpleRow = (this.rowCount / rowWidth).toFixed(2);
+	        }
+	        if (this.colCount > colWidth) {
+	            this.simpleCol = (this.colCount / colWidth).toFixed(2);
+	        }
 
 	        //参考线条数
 	        this.referenceLineCount = 6;
@@ -295,12 +305,31 @@
 	                this.dataSource.push(newRowArr);
 	            }
 
-	            this.colGap = this.drawWidth / (this.colCount - 1);
+	            this.colGap = this.drawWidth / (this._getColCount() - 1);
+	            if (this.colGap < 1.0) {
+	                this.colGap = 1.0;
+	            }
 
 	            //生成刻度集合
 	            this._calculateScaleLabel();
 	            //转换数据点为屏幕顶点坐标
 	            this._generateVertices();
+	        }
+	    }, {
+	        key: '_getRowCount',
+	        value: function _getRowCount() {
+	            if (this.isNeedSwapRowCol) {
+	                return this.colCount;
+	            }
+	            return this.rowCount;
+	        }
+	    }, {
+	        key: '_getColCount',
+	        value: function _getColCount() {
+	            if (this.isNeedSwapRowCol) {
+	                return this.rowCount;
+	            }
+	            return this.colCount;
 	        }
 
 	        /**
@@ -317,14 +346,14 @@
 	            this.zFar = -(this.colGap * this.rowCount / 2);
 	            //初始值给正, 避免后面赋值时的条件判断
 	            var z = this.zFar - this.colGap;
-	            for (var i = 0; i < this.rowCount; i++) {
+	            for (var i = 0; i < this.rowCount; i += this.simpleRow) {
 	                z += this.colGap;
 
 	                var x = -(this.drawWidth / 2.0) - this.colGap;
-	                var rowData = this.dataSource[i];
-	                for (var j = 0; j < this.colCount; j++) {
+	                var rowData = this.dataSource[Math.floor(i)];
+	                for (var j = 0; j < this.colCount; j += this.simpleCol) {
 	                    x += this.colGap;
-	                    var yValue = rowData[j];
+	                    var yValue = rowData[Math.floor(j)];
 	                    if (typeof yValue !== 'number') {
 	                        console.log("invalid data: ", i, j, rowData);
 	                    }
@@ -592,7 +621,9 @@
 	            this.colors = [];
 	            this.labelList = [];
 	            var x = this.dataSource.scaleStartX;
+	            // 当行列数量的比值太大时, zFar 就会太小了
 	            var maxZ = this.dataSource.zFar;
+	            maxZ = Math.abs(maxZ) < 35 ? -35 : maxZ;
 	            var offset = 0;
 	            var y = void 0,
 	                bottom = void 0,

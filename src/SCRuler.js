@@ -29,7 +29,9 @@ export class SCRuler {
         this.colors = [];
         this.labelList = [];
         let x = this.dataSource.scaleStartX;
+        // 当行列数量的比值太大时, zFar 就会太小了
         let maxZ = this.dataSource.zFar;
+        maxZ = Math.abs(maxZ)<35 ? -35: maxZ;
         let offset = 0;
         let y, bottom, top, topRight;
         for (let i=0; i<this.dataSource.scaleLabels.length; i++) {
