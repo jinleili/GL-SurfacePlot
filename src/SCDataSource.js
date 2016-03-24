@@ -5,8 +5,8 @@ import {Color} from './webgl/utils/Color.js';
 
 export class  SCDataSource {
     constructor(dataArr, styleObj) {
-        let colors = [0x215c91,  0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
-        this.colorGroup = this._colors(colors);
+        this.colorGroup = this._colors(styleObj.surfaceColors);
+
         this.style = styleObj;
         this.drawWidth = styleObj.drawWidth;
         this.drawHeight = styleObj.drawHeight;
@@ -24,8 +24,9 @@ export class  SCDataSource {
         this.simpleRow = 1;
         this.simpleCol = 1;
 
-        let rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight)/2;
-        let colWidth = (this.isNeedSwapRowCol ?  this.drawHeight : this.drawWidth)/2 ;
+        let factor = 2* window.devicePixelRatio;
+        let rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight)/factor;
+        let colWidth = (this.isNeedSwapRowCol ?  this.drawHeight : this.drawWidth)/factor ;
         if (this.rowCount > rowWidth) {
             this.simpleRow = Math.floor( this.rowCount / rowWidth);
         }
@@ -95,12 +96,13 @@ export class  SCDataSource {
         //更新行列
         this.rowCount = this.dataSource.length;
         this.colCount = this.dataSource[0].length;
-        console.log('new rows: ', this.rowCount, this.colCount);
 
         this.colGap  = (this.drawWidth)/(this._getColCount()-1);
         if (this.colGap < 1.0) {
             this.colGap = 1.0;
         }
+        console.log('new rows: ', this.rowCount, this.colCount);
+        console.log('col : ', this.drawWidth, this.colGap, this.colCount*this.colGap);
 
         //生成刻度集合
         this._calculateScaleLabel();
@@ -133,14 +135,14 @@ export class  SCDataSource {
         this.zFar = -(this.colGap*this.rowCount/2);
         //初始值给正, 避免后面赋值时的条件判断
         let z = this.zFar - this.colGap;
+
         for (let i=0; i<this.rowCount; i++) {
             z += this.colGap;
-
             let x =-(this.drawWidth/2.0) -this.colGap;
             let rowData = this.dataSource[i];
             for (let j=0; j<this.colCount; j++) {
                 x += this.colGap;
-                let yValue = rowData[i] ;
+                let yValue = rowData[j] ;
                 if (typeof(yValue) !== 'number') {
                     console.log("invalid data: ", i, j, rowData);
                 }

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>3D 曲面图表 Demo</title>
     <style>
+        p{font-size: 14px; color: #353535;}
+        .red{color: #ff3535;}
         #root {
             position: absolute;
             top: 30px;
@@ -15,7 +17,11 @@
 </head>
 <body>
 <div id="root">
-    <h3> 3D 曲面图表 Demo </h3>
+    <h3> 使用超大数据集的 3D 曲面图表 Demo </h3>
+    <p>使用同一组超大数据集绘制 3 个 3D 曲面图表, 加载完数据集还没有实例化图表时开始计时, 所有图表渲染完成并呈现到屏幕上后结束计时.</p>
+    <p class="red">加载数据集耗时:&nbsp;<span id="dataCost"></span>&nbsp;秒</p>
+    <p class="red">所有图表渲染呈现总耗时:&nbsp;<span id="drawCost"></span>&nbsp;秒</p>
+
     <div id="surfaceChart_Container" style="display: block; width:600px; height: 500px;">
 
     </div>
@@ -62,9 +68,13 @@
    }
 
    var container = document.getElementById('surfaceChart_Container');
+   var dataCost = document.getElementById('dataCost');
+   var drawCost = document.getElementById('drawCost');
 
-   request('./data0.txt', 28, function(arr) {
-//       request('./data2.txt', 20, function(arr) {
+   var requestStartTime = (new Date()).getTime();
+   request('./data3.txt', 15665, function(arr) {
+       var requestEndTime = (new Date()).getTime();
+       dataCost.innerHTML = (requestEndTime - requestStartTime) / 1000;
 
            // 下边 "可选参数" 的意思是指: 如果不想指定这个字段的信息, 就在 params 里删除这个字段
        var params = {
@@ -76,27 +86,29 @@
            surfaceColors:  ['0x215c91',  '0x70af48', '0x3769bd', '0xfec536', '0xa5a5a5', '0xf27934', '0x6aa3d9'] // 可选参数, 曲面顶点颜色,如果要指定, 数组长度至少为 7 位.
        };
        // 生成图表实例
-       var chart = new SurfaceChart(arr, params);
+       var chart1 = new SurfaceChart(arr, params);
        // 将曲面图显示到网页
-       container.appendChild(chart.domElement);
+       container.appendChild(chart1.domElement);
 
-//       addAnotherChart();
+       params.title = '3D 曲面图表 - 1';
+       params.fontcolor = '#252525';
+       params.backgroundColor = '#cccccc';
+       params.surfaceColors = ['#9fba00',  '#7ca500', '#529600', '#000000', '#4179ab', '#215c00', '#353535'];
+
+       var chart2 = new SurfaceChart(arr, params);
+       container.appendChild(chart2.domElement);
+
+       params.title = '3D 曲面图表 - 2';
+       params.fontcolor = '#eeeeee';
+       params.backgroundColor = '#353535';
+       params.surfaceColors = ['0x215c91',  '#7ca5d3', '0x3769bd', '#4180b7', '0xa5a5a5', '#215c91', '0x6aa3d9'];
+       var chart3 = new SurfaceChart(arr, params);
+       container.appendChild(chart3.domElement);
+
+       var drawEndTime = (new Date()).getTime();
+       drawCost.innerHTML = (drawEndTime - requestEndTime) / 1000;
    });
 
-   function addAnotherChart() {
-       request('./data1.txt', 20, function(arr) {
-           var params = {
-               width: 600,
-               height: 500,
-               title: '3D 曲面图表 - 1',
-               fontColor: '#353535',
-               backgroundColor: '#efefef',
-               surfaceColors:  ['#9fbadb',  '#7ca5d3', '#5296d3', '#4180b7', '#4179ab', '#215c91', '#3769bd']
-           };
-           var chart = new SurfaceChart(arr, params);
-           container.appendChild(chart.domElement);
-       });
-   }
 </script>
 
 </body>

@@ -12,11 +12,15 @@ export class SCStyle {
         this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
         this.rgbFontColor = Color.hex2rgb(this.fontColor);
         this.rgbBackgroundColor = Color.hex2rgb(this.backgroundColor);
-
+        if (typeof (params.surfaceColors) === 'array' && params.surfaceColors.length > 6) {
+            this.surfaceColors = params.surfaceColors;
+        } else {
+            this.surfaceColors = [0x215c91,  0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
+        }
         //这里的 padding 并不表示最终曲面与画板的实际内边距
-        this.paddingLR = 50;
-        this.paddingTop = 50;
-        this.paddingBottom = 50;
+        this.paddingLR = 50* window.devicePixelRatio;
+        this.paddingTop = 40* window.devicePixelRatio;
+        this.paddingBottom = 50* window.devicePixelRatio;
 
         this._canvasWidth = 0;
         this._canvasHeight = 0;
