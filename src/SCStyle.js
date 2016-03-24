@@ -12,7 +12,7 @@ export class SCStyle {
         this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
         this.rgbFontColor = Color.hex2rgb(this.fontColor);
         this.rgbBackgroundColor = Color.hex2rgb(this.backgroundColor);
-        if (typeof (params.surfaceColors) === 'array' && params.surfaceColors.length > 6) {
+        if (params.surfaceColors instanceof Array && params.surfaceColors.length > 6) {
             this.surfaceColors = params.surfaceColors;
         } else {
             this.surfaceColors = [0x215c91,  0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];

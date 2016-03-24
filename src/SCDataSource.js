@@ -24,7 +24,7 @@ export class  SCDataSource {
         this.simpleRow = 1;
         this.simpleCol = 1;
 
-        let factor = 2* window.devicePixelRatio;
+        let factor = 1.5;//2* window.devicePixelRatio;
         let rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight)/factor;
         let colWidth = (this.isNeedSwapRowCol ?  this.drawHeight : this.drawWidth)/factor ;
         if (this.rowCount > rowWidth) {
@@ -97,12 +97,8 @@ export class  SCDataSource {
         this.rowCount = this.dataSource.length;
         this.colCount = this.dataSource[0].length;
 
-        this.colGap  = (this.drawWidth)/(this._getColCount()-1);
-        if (this.colGap < 1.0) {
-            this.colGap = 1.0;
-        }
-        console.log('new rows: ', this.rowCount, this.colCount);
-        console.log('col : ', this.drawWidth, this.colGap, this.colCount*this.colGap);
+        //列间距不能取整, 会导致渲染超出绘制区
+        this.colGap  = (this.drawWidth)/(this._getColCount()-1).toFixed(3);
 
         //生成刻度集合
         this._calculateScaleLabel();
@@ -215,6 +211,7 @@ export class  SCDataSource {
         }
         this.dataScale = this.drawHeight /
             (Math.abs(this.scaleLabels[0]-this.scaleLabels[this.scaleLabels.length-1]));
+        console.log('dataScale: ',this.drawHeight, this.dataScale, this.scaleCenterY, distance, scaleGap);
     }
 
     /**

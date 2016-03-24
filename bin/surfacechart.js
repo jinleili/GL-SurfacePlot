@@ -112,15 +112,24 @@
 	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.style);
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
-	        var offsetZ = -this.style.canvasHeight + this.dataSource.zFar * 2.5;
-	        _Matrix.Matrix4.translate(this.mvMatrix, [30, 0.0, offsetZ]);
-
 	        var rotateY = -20,
 	            rotateX = 20;
 	        if (this.dataSource.isNeedSwapRowCol) {
 	            rotateY = 90 - 20;
-	            // rotateX *= -1;
 	        }
+	        /**
+	         * 基于曲面在 3D 空间的深度调整平移量
+	         * zFar 太小,表明行列比太大, 此时纵深太小,就没有必要再在 x 轴上做旋转了
+	         */
+	        var zFar = Math.abs(this.dataSource.zFar) * 2.5;
+	        if (zFar < 450) {
+	            zFar = 450;
+	            rotateX = 5;
+	        }
+
+	        var offsetZ = -this.style.canvasHeight - zFar;
+	        _Matrix.Matrix4.translate(this.mvMatrix, [30, 0.0, offsetZ]);
+
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateX / 180 * Math.PI, [1, 0, 0]);
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateY / 180 * Math.PI, [0, 1, 0]);
 
@@ -229,7 +238,7 @@
 	        this.simpleRow = 1;
 	        this.simpleCol = 1;
 
-	        var factor = 2 * window.devicePixelRatio;
+	        var factor = 1.5; //2* window.devicePixelRatio;
 	        var rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight) / factor;
 	        var colWidth = (this.isNeedSwapRowCol ? this.drawHeight : this.drawWidth) / factor;
 	        if (this.rowCount > rowWidth) {
@@ -309,12 +318,8 @@
 	            this.rowCount = this.dataSource.length;
 	            this.colCount = this.dataSource[0].length;
 
-	            this.colGap = this.drawWidth / (this._getColCount() - 1);
-	            if (this.colGap < 1.0) {
-	                this.colGap = 1.0;
-	            }
-	            console.log('new rows: ', this.rowCount, this.colCount);
-	            console.log('col : ', this.drawWidth, this.colGap, this.colCount * this.colGap);
+	            //列间距不能取整, 会导致渲染超出绘制区
+	            this.colGap = this.drawWidth / (this._getColCount() - 1).toFixed(3);
 
 	            //生成刻度集合
 	            this._calculateScaleLabel();
@@ -436,6 +441,7 @@
 	                this.scaleLabels.push(currentLabel);
 	            }
 	            this.dataScale = this.drawHeight / Math.abs(this.scaleLabels[0] - this.scaleLabels[this.scaleLabels.length - 1]);
+	            console.log('dataScale: ', this.drawHeight, this.dataScale, this.scaleCenterY, distance, scaleGap);
 	        }
 
 	        /**
@@ -811,7 +817,7 @@
 	        this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
 	        this.rgbFontColor = _Color.Color.hex2rgb(this.fontColor);
 	        this.rgbBackgroundColor = _Color.Color.hex2rgb(this.backgroundColor);
-	        if (typeof params.surfaceColors === 'array' && params.surfaceColors.length > 6) {
+	        if (params.surfaceColors instanceof Array && params.surfaceColors.length > 6) {
 	            this.surfaceColors = params.surfaceColors;
 	        } else {
 	            this.surfaceColors = [0x215c91, 0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];

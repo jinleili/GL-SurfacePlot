@@ -37,14 +37,23 @@ export class SurfaceChart {
         this.dataSource = new SCDataSource(dataArr, this.style);
 
         this.mvMatrix = Matrix4.identity();
-        let offsetZ = -this.style.canvasHeight+this.dataSource.zFar*2.5;
-        Matrix4.translate(this.mvMatrix, [30,  0.0, offsetZ]);
-
         let rotateY = -20, rotateX = 20;
         if (this.dataSource.isNeedSwapRowCol) {
             rotateY = 90 - 20;
-            // rotateX *= -1;
         }
+        /**
+         * 基于曲面在 3D 空间的深度调整平移量
+         * zFar 太小,表明行列比太大, 此时纵深太小,就没有必要再在 x 轴上做旋转了
+         */
+        let zFar = Math.abs(this.dataSource.zFar)*2.5;
+        if (zFar < 450) {
+            zFar = 450;
+            rotateX = 5;
+        }
+        
+        let offsetZ = -this.style.canvasHeight-zFar;
+        Matrix4.translate(this.mvMatrix, [30,  0.0, offsetZ]);
+        
         Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateX/180*Math.PI, [1, 0, 0]);
         Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateY/180*Math.PI, [0, 1, 0]);
 
