@@ -23,10 +23,10 @@ export class  SCDomElement {
         return this.createElement('div', styleStr);
     }
 
-    createLabels() {
+    createLabels(style) {
         for (let i=0; i<7; i++) {
             let div = this.createElement('div', 'position:absolute; text-align:right; font-size: 12px; display:None;' +
-                ' width: 100px; height20px');
+                ' width: 100px; height20px; color:' + style.scaleColor);
             let textNode = document.createTextNode("");
             div.appendChild(textNode);
             this.panel.appendChild(div);

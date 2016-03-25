@@ -18,7 +18,7 @@ export class SCRuler {
     }
 
     /**
-     * 计算标尺的顶点
+     * 计算标尺线及刻度线的顶点
      * 
      * 标尺默认的状态是个顺时针旋转了 90 度的 L:
      * 一条标尺线由两条直线(四个三角形)组成
@@ -51,7 +51,7 @@ export class SCRuler {
             offset = i*6;
             this._concatVertices(bottom, top, topRight, offset);
         }
-        //底部刻度线
+        //底部标尺线
         if (this.dataSource.isNeedSwapRowCol) {
             bottom = [-x, y,  -maxZ];
             top = [x, y,  -maxZ];
@@ -61,13 +61,14 @@ export class SCRuler {
             top = [-x, y,  -maxZ];
             topRight = [x, y, -maxZ];
         }
-
         offset += 6;
         this._concatVertices(bottom, top, topRight, offset);
+
+        //刻度线
     }
     
     _concatVertices(bottom, top, topRight, offset) {
-        let color = this.dataSource.style.rgbFontColor;
+        let color = this.dataSource.style.rgbScaleColor;
         let halfLineWidth = 1.0;
         this.vertices.push( bottom[0], bottom[1]+halfLineWidth, bottom[2],
             bottom[0], bottom[1]-halfLineWidth, bottom[2],

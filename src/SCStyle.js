@@ -16,8 +16,15 @@ export class SCStyle {
             this.surfaceColors = params.surfaceColors;
         } else {
             this.surfaceColors = [0x215c91,  0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
-        }
-        //这里的 padding 并不表示最终曲面与画板的实际内边距
+        } 
+
+        // 是否显示辅助线及刻度
+        this.isNeedShowScale = params.showScale  === undefined ? true : params.showScale;
+        console.log('this.isNeedShowScale:', this.isNeedShowScale);
+        this.scaleColor = params.scaleColor ? params.scaleColor : this.fontColor;
+        this.rgbScaleColor = Color.hex2rgb(this.scaleColor);
+
+            //这里的 padding 并不表示最终曲面与画板的实际内边距
         this.paddingLR = 50* window.devicePixelRatio;
         this.paddingTop = 40* window.devicePixelRatio;
         this.paddingBottom = 50* window.devicePixelRatio;

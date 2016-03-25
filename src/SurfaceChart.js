@@ -65,12 +65,14 @@ export class SurfaceChart {
 
         //曲面绘制类
         this.surface  = new SCSurface(this.renderer.gl,  this.prg, this.dataSource);
-        //标尺线
-        this.ruler = new SCRuler(this.renderer.gl, this.prg, this.dataSource);
-        this.draw();
+        //标尺线及刻度
+        if (this.style.isNeedShowScale === true) {
+            this.ruler = new SCRuler(this.renderer.gl, this.prg, this.dataSource);
+            let finalMatrix = Matrix4.multiplyMatrices(this.pMatrix, this.mvMatrix);
+            this.domElementObj.showLabels(this.ruler.labelList, finalMatrix);
+        }
 
-        let finalMatrix = Matrix4.multiplyMatrices(this.pMatrix, this.mvMatrix);
-        this.domElementObj.showLabels(this.ruler.labelList, finalMatrix);
+        this.draw();
     }
 
     /**
@@ -104,7 +106,9 @@ export class SurfaceChart {
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
-        this.ruler.draw();
+        if (this.ruler) {
+            this.ruler.draw();
+        }
         this.surface.draw();
     }
 

@@ -48,7 +48,6 @@ export  class SCSurface {
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indexBufferObj.buffer);
             this.gl.drawElements(this.gl.TRIANGLES, indexBufferObj.length, this.gl.UNSIGNED_SHORT, 0);
         });
-
     }
 }
 

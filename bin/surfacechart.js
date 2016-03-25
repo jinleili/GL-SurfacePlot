@@ -141,12 +141,14 @@
 
 	        //曲面绘制类
 	        this.surface = new _SCSurface.SCSurface(this.renderer.gl, this.prg, this.dataSource);
-	        //标尺线
-	        this.ruler = new _SCRuler.SCRuler(this.renderer.gl, this.prg, this.dataSource);
-	        this.draw();
+	        //标尺线及刻度
+	        if (this.style.isNeedShowScale === true) {
+	            this.ruler = new _SCRuler.SCRuler(this.renderer.gl, this.prg, this.dataSource);
+	            var finalMatrix = _Matrix.Matrix4.multiplyMatrices(this.pMatrix, this.mvMatrix);
+	            this.domElementObj.showLabels(this.ruler.labelList, finalMatrix);
+	        }
 
-	        var finalMatrix = _Matrix.Matrix4.multiplyMatrices(this.pMatrix, this.mvMatrix);
-	        this.domElementObj.showLabels(this.ruler.labelList, finalMatrix);
+	        this.draw();
 	    }
 
 	    /**
@@ -187,7 +189,9 @@
 	            this.gl.enable(this.gl.BLEND);
 	            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
-	            this.ruler.draw();
+	            if (this.ruler) {
+	                this.ruler.draw();
+	            }
 	            this.surface.draw();
 	        }
 	    }]);
@@ -661,7 +665,7 @@
 	    }
 
 	    /**
-	     * 计算标尺的顶点
+	     * 计算标尺线及刻度线的顶点
 	     * 
 	     * 标尺默认的状态是个顺时针旋转了 90 度的 L:
 	     * 一条标尺线由两条直线(四个三角形)组成
@@ -701,7 +705,7 @@
 	                offset = i * 6;
 	                this._concatVertices(bottom, top, topRight, offset);
 	            }
-	            //底部刻度线
+	            //底部标尺线
 	            if (this.dataSource.isNeedSwapRowCol) {
 	                bottom = [-x, y, -maxZ];
 	                top = [x, y, -maxZ];
@@ -711,14 +715,15 @@
 	                top = [-x, y, -maxZ];
 	                topRight = [x, y, -maxZ];
 	            }
-
 	            offset += 6;
 	            this._concatVertices(bottom, top, topRight, offset);
+
+	            //刻度线
 	        }
 	    }, {
 	        key: '_concatVertices',
 	        value: function _concatVertices(bottom, top, topRight, offset) {
-	            var color = this.dataSource.style.rgbFontColor;
+	            var color = this.dataSource.style.rgbScaleColor;
 	            var halfLineWidth = 1.0;
 	            this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
 	            this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
@@ -822,6 +827,13 @@
 	        } else {
 	            this.surfaceColors = [0x215c91, 0x70af48, 0x3769bd, 0xfec536, 0xa5a5a5, 0xf27934, 0x6aa3d9];
 	        }
+
+	        // 是否显示辅助线及刻度
+	        this.isNeedShowScale = params.showScale === undefined ? true : params.showScale;
+	        console.log('this.isNeedShowScale:', this.isNeedShowScale);
+	        this.scaleColor = params.scaleColor ? params.scaleColor : this.fontColor;
+	        this.rgbScaleColor = _Color.Color.hex2rgb(this.scaleColor);
+
 	        //这里的 padding 并不表示最终曲面与画板的实际内边距
 	        this.paddingLR = 50 * window.devicePixelRatio;
 	        this.paddingTop = 40 * window.devicePixelRatio;
@@ -901,9 +913,9 @@
 	        }
 	    }, {
 	        key: 'createLabels',
-	        value: function createLabels() {
+	        value: function createLabels(style) {
 	            for (var i = 0; i < 7; i++) {
-	                var div = this.createElement('div', 'position:absolute; text-align:right; font-size: 12px; display:None;' + ' width: 100px; height20px');
+	                var div = this.createElement('div', 'position:absolute; text-align:right; font-size: 12px; display:None;' + ' width: 100px; height20px; color:' + style.scaleColor);
 	                var textNode = document.createTextNode("");
 	                div.appendChild(textNode);
 	                this.panel.appendChild(div);

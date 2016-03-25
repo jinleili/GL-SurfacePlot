@@ -70,6 +70,10 @@
        var params = {
            width: 600,  // 必设参数,  图表在屏幕上的宽度
            height: 500, // 必设参数,  一般高度要设置得比宽度小,图表会显得比较漂亮
+           showScale: true, // 可选参数, 是否显示辅助线及刻度, 默认为 true
+           scaleColor: '#0099fa', // 可选参数, 辅助线及刻度的颜色, 默认为与 title 颜色一样
+           rowTitlePrefix:'A', // 可选参数, 行的名称前缀, 默认为空
+           colTitlePrefix:'B', // 可选参数, 列的名称前缀, 默认为空
            title: '3D 曲面图表 - 0', // 可选参数, 图表的名称, 默认为空
            fontColor: '#fafafa', // 可选参数, 图表上文字的颜色, 默认为0xfafafa
            backgroundColor: '#353535', // 可选参数, 图表背景颜色, 默认为 0x353535
@@ -80,7 +84,7 @@
        // 将曲面图显示到网页
        container.appendChild(chart.domElement);
 
-//       addAnotherChart();
+       addAnotherChart();
    });
 
    function addAnotherChart() {
@@ -88,6 +92,7 @@
            var params = {
                width: 600,
                height: 500,
+               showScale: false,
                title: '3D 曲面图表 - 1',
                fontColor: '#353535',
                backgroundColor: '#efefef',
