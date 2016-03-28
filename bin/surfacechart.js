@@ -117,6 +117,7 @@
 	        if (this.dataSource.isNeedSwapRowCol) {
 	            rotateY = 90 - 20;
 	        }
+
 	        /**
 	         * 基于曲面在 3D 空间的深度调整平移量
 	         * zFar 太小,表明行列比太大, 此时纵深太小,就没有必要再在 x 轴上做旋转了
@@ -134,8 +135,12 @@
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateY / 180 * Math.PI, [0, 1, 0]);
 
 	        //构建一个与图表坐标系一致的投影矩阵
-	        // this.pMatrix = Matrix4.orthogonal(-this.renderer.centerX, this.renderer.centerX, -this.renderer.centerY, this.renderer.centerY, -5000.0, 5000.0);
-	        this.pMatrix = _Matrix.Matrix4.perspective(45 / 180 * Math.PI, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
+
+	        if (this.style.usePerspective === true) {
+	            this.pMatrix = _Matrix.Matrix4.perspective(45 / 180 * Math.PI, this.style.canvasWidth / this.style.canvasHeight, 0.1, 50000);
+	        } else {
+	            this.pMatrix = _Matrix.Matrix4.orthogonal(-this.renderer.canvasWidth, this.renderer.canvasWidth, -this.renderer.canvasHeight, this.renderer.canvasHeight, -5000.0, 5000.0);
+	        }
 
 	        this.initProgram();
 
@@ -818,6 +823,9 @@
 
 	        this.width = params.width;
 	        this.height = params.height;
+	        //开启透视效果
+	        this.usePerspective = params.usePerspective === undefined ? true : params.usePerspective;
+
 	        this.fontColor = params.fontColor ? params.fontColor : 0xfafafa;
 	        this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
 	        this.rgbFontColor = _Color.Color.hex2rgb(this.fontColor);

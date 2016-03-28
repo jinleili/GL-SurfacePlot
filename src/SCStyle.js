@@ -8,6 +8,9 @@ export class SCStyle {
     constructor(params) {
         this.width = params.width;
         this.height = params.height;
+        //开启透视效果
+        this.usePerspective = params.usePerspective  === undefined ? true : params.usePerspective;
+        
         this.fontColor = params.fontColor ? params.fontColor : 0xfafafa;
         this.backgroundColor = params.backgroundColor ? params.backgroundColor : 0x353535;
         this.rgbFontColor = Color.hex2rgb(this.fontColor);
