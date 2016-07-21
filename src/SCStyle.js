@@ -23,7 +23,6 @@ export class SCStyle {
 
         // 是否显示辅助线及刻度
         this.isNeedShowScale = params.showScale  === undefined ? true : params.showScale;
-        console.log('this.isNeedShowScale:', this.isNeedShowScale);
         this.scaleColor = params.scaleColor ? params.scaleColor : this.fontColor;
         this.rgbScaleColor = Color.hex2rgb(this.scaleColor);
 

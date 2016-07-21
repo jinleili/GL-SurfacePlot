@@ -2,7 +2,7 @@
  * Created by grenlight on 16/3/19.
  */
 
-import { Object3D } from '../core/Object3D.js';
+import { Object3D } from './Object3D.js';
 
 export class Geometry extends Object3D {
     constructor() {

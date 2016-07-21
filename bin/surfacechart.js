@@ -73,26 +73,26 @@
 
 	var _SCRuler = __webpack_require__(5);
 
-	var _SCStyle = __webpack_require__(7);
+	var _SCStyle = __webpack_require__(6);
 
-	var _SCDomElement = __webpack_require__(8);
+	var _SCDomElement = __webpack_require__(7);
 
-	var _shaders = __webpack_require__(10);
+	var _shaders = __webpack_require__(9);
 
-	var _WebGLRenderer = __webpack_require__(11);
+	var _WebGLRenderer = __webpack_require__(10);
 
-	var _Matrix = __webpack_require__(13);
+	var _Matrix = __webpack_require__(12);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var SurfaceChart = exports.SurfaceChart = function () {
-	    function SurfaceChart(dataArr, params) {
+	    function SurfaceChart(chartData, params) {
 	        _classCallCheck(this, SurfaceChart);
 
 	        if (params.width < 300 || params.height < 200) {
 	            throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
 	        }
-	        if (!dataArr || dataArr.length === 0) {
+	        if (!chartData || !chartData['rows'] || chartData['rows'].length === 0) {
 	            throw new Error('SurfaceChart 需要有效数组做为初始化参数');
 	        }
 
@@ -109,27 +109,34 @@
 	        this.domElement = this.domElementObj.panel;
 	        this.domElement.appendChild(this.renderer.canvas);
 
-	        this.dataSource = new _SCDataSource.SCDataSource(dataArr, this.style);
+	        this.dataSource = new _SCDataSource.SCDataSource(chartData, this.style);
 
 	        this.mvMatrix = _Matrix.Matrix4.identity();
 	        var rotateY = -20,
 	            rotateX = 20;
 	        if (this.dataSource.isNeedSwapRowCol) {
-	            rotateY = 90 - 20;
+	            rotateY = -90 - 20;
 	        }
 
 	        /**
 	         * 基于曲面在 3D 空间的深度调整平移量
 	         * zFar 太小,表明行列比太大, 此时纵深太小,就没有必要再在 x 轴上做旋转了
 	         */
-	        var zFar = Math.abs(this.dataSource.zFar) * 2.5;
-	        if (zFar < 450) {
-	            zFar = 450;
-	            rotateX = 5;
+	        var zFar = 0;
+	        if (this.dataSource.isNeedSwapRowCol) {
+	            zFar = Math.abs(this.dataSource.scaleStartX) * 2.5;
+	            if (zFar < 420) {
+	                zFar = 420;
+	            }
+	        } else {
+	            zFar = Math.abs(this.dataSource.zFar) * 2.5;
+	            if (zFar < 450) {
+	                zFar = 450;
+	            }
 	        }
 
 	        var offsetZ = -this.style.canvasHeight - zFar;
-	        _Matrix.Matrix4.translate(this.mvMatrix, [30, 0.0, offsetZ]);
+	        _Matrix.Matrix4.translate(this.mvMatrix, [-30, -10.0, offsetZ]);
 
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateX / 180 * Math.PI, [1, 0, 0]);
 	        _Matrix.Matrix4.rotate(this.mvMatrix, this.mvMatrix, rotateY / 180 * Math.PI, [0, 1, 0]);
@@ -150,7 +157,15 @@
 	        if (this.style.isNeedShowScale === true) {
 	            this.ruler = new _SCRuler.SCRuler(this.renderer.gl, this.prg, this.dataSource);
 	            var finalMatrix = _Matrix.Matrix4.multiplyMatrices(this.pMatrix, this.mvMatrix);
-	            this.domElementObj.showLabels(this.ruler.labelList, finalMatrix);
+	            this.domElementObj.showYLabels(this.ruler.yLabelList, finalMatrix);
+	            var zList = this.ruler.zLabelList;
+	            var xList = this.ruler.xLabelList;
+	            if (this.dataSource.isNeedSwapRowCol === true) {
+	                zList = this.ruler.xLabelList;
+	                xList = this.ruler.zLabelList;
+	            }
+	            this.domElementObj.showZLabels(zList, finalMatrix);
+	            this.domElementObj.showXLabels(xList, finalMatrix);
 	        }
 
 	        this.draw();
@@ -225,7 +240,7 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var SCDataSource = exports.SCDataSource = function () {
-	    function SCDataSource(dataArr, styleObj) {
+	    function SCDataSource(chartData, styleObj) {
 	        _classCallCheck(this, SCDataSource);
 
 	        this.colorGroup = this._colors(styleObj.surfaceColors);
@@ -233,10 +248,17 @@
 	        this.style = styleObj;
 	        this.drawWidth = styleObj.drawWidth;
 	        this.drawHeight = styleObj.drawHeight;
-	        this.rowCount = dataArr.length;
+
+	        this.dataArr = this._parseData(chartData);
+	        this.rowCount = this.rowHeaders.length;
 	        this._validateRowAndCol(this.rowCount);
-	        this.colCount = dataArr[0].length;
+	        this.colCount = this.colHeaders.length;
 	        this._validateRowAndCol(this.colCount);
+
+	        // this.rowCount = dataArr.length;
+	        // this._validateRowAndCol(this.rowCount);
+	        // this.colCount = dataArr[0].length;
+	        // this._validateRowAndCol(this.colCount);
 
 	        // 使图形呈现横向展开的状态
 	        this.isNeedSwapRowCol = false;
@@ -247,7 +269,7 @@
 	        this.simpleRow = 1;
 	        this.simpleCol = 1;
 
-	        var factor = 1.5; //2* window.devicePixelRatio;
+	        var factor = 2 * window.devicePixelRatio;
 	        var rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight) / factor;
 	        var colWidth = (this.isNeedSwapRowCol ? this.drawHeight : this.drawWidth) / factor;
 	        if (this.rowCount > rowWidth) {
@@ -265,12 +287,37 @@
 	        this.dataScale = 0;
 
 	        //选第一个值做为起始参考值
-	        this.minValue = this.maxValue = parseFloat(dataArr[0][0]);
+	        this.minValue = this.maxValue = parseFloat(this.dataArr[0][0]);
 	        this._validateDataType(this.minValue);
-	        this._formatData(dataArr);
+	        this._formatData(this.dataArr);
 	    }
 
+	    /**
+	     *  处理约定的格式: {colNameArr:[], rows:[{rowName:'', data:[]}, ...]}
+	     * @param jsonData
+	     * @returns {Array}
+	     * @private
+	     */
+
+
 	    _createClass(SCDataSource, [{
+	        key: '_parseData',
+	        value: function _parseData(jsonData) {
+	            var rowArr = jsonData['rows'];
+	            var length = rowArr.length;
+	            this.rowHeaders = [];
+	            this.colHeaders = jsonData['colNameArr'];
+
+	            var newArr = [];
+	            for (var i = 0; i < length; i++) {
+	                var item = rowArr[i];
+	                this.rowHeaders.push(item.rowName);
+	                newArr.push(item.data);
+	            }
+
+	            return newArr;
+	        }
+	    }, {
 	        key: '_colors',
 	        value: function _colors(colors) {
 	            var arr = [];
@@ -283,7 +330,7 @@
 	        key: '_validateRowAndCol',
 	        value: function _validateRowAndCol(count) {
 	            if (count < 2) {
-	                throw new Error('SurfaceChart 至少需要两行两列数据 ');
+	                throw new Error('SurfaceChart 至少需要 2 行 2 列数据 ');
 	            }
 	        }
 	    }, {
@@ -310,7 +357,6 @@
 	            for (var i = 0; i < this.rowCount; i += this.simpleRow) {
 	                var rowArr = dataArr[Math.floor(i)];
 	                var newRowArr = [];
-
 	                for (var j = 0; j < this.colCount; j += this.simpleCol) {
 	                    var value = parseFloat(rowArr[Math.floor(j)]);
 	                    this._validateDataType(value);
@@ -326,9 +372,8 @@
 	            //更新行列
 	            this.rowCount = this.dataSource.length;
 	            this.colCount = this.dataSource[0].length;
-
 	            //列间距不能取整, 会导致渲染超出绘制区
-	            this.colGap = this.drawWidth / (this._getColCount() - 1).toFixed(3);
+	            this.colGap = parseFloat((this.drawWidth / (this._getColCount() - 1)).toFixed(4));
 
 	            //生成刻度集合
 	            this._calculateScaleLabel();
@@ -363,13 +408,14 @@
 	            this.vertices = [];
 	            this.colors = [];
 	            //z 轴远端坐标
-	            this.zFar = -(this.colGap * this.rowCount / 2);
+	            this.zFar = -(this.colGap * (this.rowCount - 1) / 2);
+
 	            //初始值给正, 避免后面赋值时的条件判断
 	            var z = this.zFar - this.colGap;
 
-	            for (var i = 0; i < this.rowCount; i++) {
+	            for (var i = this.rowCount - 1; i >= 0; i--) {
 	                z += this.colGap;
-	                var x = -(this.drawWidth / 2.0) - this.colGap;
+	                var x = this.scaleStartX - this.colGap;
 	                var rowData = this.dataSource[i];
 	                for (var j = 0; j < this.colCount; j++) {
 	                    x += this.colGap;
@@ -378,14 +424,13 @@
 	                        console.log("invalid data: ", i, j, rowData);
 	                    }
 	                    this.vertices.push(x, (yValue - this.scaleCenterY) * this.dataScale, z);
+	                    // this.vertices.push(x, (yValue / this.dataScale - this.scaleCenterY), z);
 
 	                    var color = this._calculateVertexColor(yValue);
 	                    this.colors.push(color[0], color[1], color[2]);
 	                }
 	            }
 	            this._generateIndices();
-	            // console.log(this.minValue, this.maxValue);
-	            // console.log(this.scaleLabels);
 	        }
 	    }, {
 	        key: '_calculateVertexColor',
@@ -425,9 +470,9 @@
 	    }, {
 	        key: '_calculateScaleLabel',
 	        value: function _calculateScaleLabel() {
-	            var distance = Math.abs(this.maxValue - this.minValue);
+	            var distance = this.maxValue - this.minValue;
 	            //为了图形美观,坐标上的刻度值应该做一定的舍入
-	            var scaleGap = distance / (this.referenceLineCount - 1).toFixed(2);
+	            var scaleGap = Math.abs(distance) / (this.referenceLineCount - 1).toFixed(2);
 	            scaleGap = this._calculateGap(scaleGap, 1);
 
 	            this.scaleCenterY = this.minValue + distance / 2.0;
@@ -450,7 +495,6 @@
 	                this.scaleLabels.push(currentLabel);
 	            }
 	            this.dataScale = this.drawHeight / Math.abs(this.scaleLabels[0] - this.scaleLabels[this.scaleLabels.length - 1]);
-	            console.log('dataScale: ', this.drawHeight, this.dataScale, this.scaleCenterY, distance, scaleGap);
 	        }
 
 	        /**
@@ -635,25 +679,26 @@
 
 /***/ },
 /* 5 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	'use strict';
+	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
-	exports.SCRuler = undefined;
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/21.
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      *
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * 管理图表上的标尺线及刻度
-	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
-
-
-	var _SCLabel = __webpack_require__(6);
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Created by grenlight on 16/3/21.
+	 *
+	 * 管理图表上的标尺线及刻度
+	 */
+	var halfLineWidth = 0.5;
+	var scaleGap = 35 * window.devicePixelRatio;
+	var scaleLength = 10;
 
 	var SCRuler = exports.SCRuler = function () {
 	    function SCRuler(gl, prg, dataSource) {
@@ -678,16 +723,22 @@
 
 
 	    _createClass(SCRuler, [{
-	        key: 'generateScale',
+	        key: "generateScale",
 	        value: function generateScale() {
 	            this.vertices = [];
 	            this.indices = [];
 	            this.colors = [];
-	            this.labelList = [];
+	            this.yLabelList = [];
+	            this.xLabelList = [];
+	            this.zLabelList = [];
+
 	            var x = this.dataSource.scaleStartX;
+	            x = Math.abs(x) < 35 ? -35 : x;
+
 	            // 当行列数量的比值太大时, zFar 就会太小了
 	            var maxZ = this.dataSource.zFar;
 	            maxZ = Math.abs(maxZ) < 35 ? -35 : maxZ;
+
 	            var offset = 0;
 	            var y = void 0,
 	                bottom = void 0,
@@ -697,23 +748,23 @@
 	                var label = this.dataSource.scaleLabels[i];
 	                y = (label - this.dataSource.scaleCenterY) * this.dataSource.dataScale;
 	                if (this.dataSource.isNeedSwapRowCol) {
-	                    bottom = [x, y, maxZ];
-	                    top = [-x, y, maxZ];
-	                    topRight = [-x, y, -maxZ];
+	                    bottom = [-x, y, -maxZ];
+	                    top = [x, y, -maxZ];
+	                    topRight = [x, y, maxZ];
 	                } else {
 	                    bottom = [x, y, -maxZ];
 	                    top = [x, y, maxZ];
 	                    topRight = [-x, y, maxZ];
 	                }
 
-	                this.labelList.push({ coord: bottom, label: label });
+	                this.yLabelList.push({ coord: bottom, label: label });
 	                offset = i * 6;
 	                this._concatVertices(bottom, top, topRight, offset);
 	            }
 	            //底部标尺线
 	            if (this.dataSource.isNeedSwapRowCol) {
 	                bottom = [-x, y, -maxZ];
-	                top = [x, y, -maxZ];
+	                top = [-x, y, maxZ];
 	                topRight = [x, y, maxZ];
 	            } else {
 	                bottom = [-x, y, maxZ];
@@ -721,21 +772,76 @@
 	                topRight = [x, y, -maxZ];
 	            }
 	            offset += 6;
-	            this._concatVertices(bottom, top, topRight, offset);
+	            offset = this._generateBoxLineInfo(bottom, top, false, this.dataSource.style.rgbScaleColor, offset);
+	            offset = this._generateBoxLineInfo(top, topRight, true, this.dataSource.style.rgbScaleColor, offset);
 
-	            //刻度线
+	            // x 刻度线
+	            this._generateScaleX(x, y, -maxZ, offset);
 	        }
 	    }, {
-	        key: '_concatVertices',
+	        key: "_generateScaleX",
+	        value: function _generateScaleX(startX, startY, startZ, offset) {
+	            var distance = this.dataSource.colGap * this.dataSource.colCount;
+	            var maxCountX = distance / 45;
+
+	            var newStartZ = startZ;
+	            if (this.dataSource.isNeedSwapRowCol === true) {
+	                newStartZ = -newStartZ - scaleLength;
+	            }
+	            var jumpX = 1;
+	            if (maxCountX < this.dataSource.colHeaders.length) {
+	                jumpX = Math.ceil(this.dataSource.colHeaders.length / maxCountX);
+	            }
+	            var newCount = this.dataSource.colHeaders.length / jumpX;
+	            var stepX = distance / newCount;
+	            var color = this.dataSource.style.rgbScaleColor;
+
+	            var offsetX = 0;
+	            for (var i = 0; i < newCount; i++) {
+	                offsetX = stepX * (i + 0.5);
+	                var near = [startX + offsetX, startY, newStartZ + scaleLength];
+	                var far = [startX + offsetX, startY, newStartZ];
+
+	                offset = this._generateBoxLineInfo(near, far, false, this.dataSource.style.rgbScaleColor, offset);
+
+	                this.xLabelList.push({ coord: near, label: this.dataSource.colHeaders[i * jumpX] });
+	            }
+	            this._generateScaleZ(-startX, startY, startZ, offset);
+	        }
+	    }, {
+	        key: "_generateScaleZ",
+	        value: function _generateScaleZ(startX, startY, startZ, offset) {
+	            // if (this.dataSource.isNeedSwapRowCol === true) {
+	            //     startX = (-startX) - scaleLength;
+	            // }
+	            var distance = Math.abs(this.dataSource.zFar) * 2;
+	            var maxCountZ = distance / scaleGap;
+	            var jumpZ = 1;
+	            if (maxCountZ < this.dataSource.rowHeaders.length) {
+	                jumpZ = Math.ceil(this.dataSource.rowHeaders.length / maxCountZ);
+	            }
+	            var newCount = Math.ceil(this.dataSource.rowHeaders.length / jumpZ);
+	            var stepZ = distance / newCount;
+
+	            var offsetZ = 0;
+	            for (var i = 0; i < newCount; i++) {
+	                offsetZ = stepZ * (i + 0.5);
+	                var left = [startX, startY, startZ - offsetZ];
+	                var right = [startX + scaleLength, startY, startZ - offsetZ];
+	                offset = this._generateBoxLineInfo(left, right, true, this.dataSource.style.rgbScaleColor, offset);
+	                this.zLabelList.push({ coord: right, label: this.dataSource.rowHeaders[i * jumpZ] });
+	            }
+	        }
+	    }, {
+	        key: "_concatVertices",
 	        value: function _concatVertices(bottom, top, topRight, offset) {
 	            var color = this.dataSource.style.rgbScaleColor;
-	            var halfLineWidth = 1.0;
 	            this.vertices.push(bottom[0], bottom[1] + halfLineWidth, bottom[2], bottom[0], bottom[1] - halfLineWidth, bottom[2], top[0], top[1] + halfLineWidth, top[2], top[0], top[1] - halfLineWidth, top[2], topRight[0], topRight[1] + halfLineWidth, topRight[2], topRight[0], topRight[1] - halfLineWidth, topRight[2]);
 	            this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
 	            this.indices.push(offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2, offset + 2, offset + 3, offset + 4, offset + 3, offset + 5, offset + 4);
 	        }
 	    }, {
-	        key: 'draw',
+	        key: "draw",
 	        value: function draw() {
 	            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
 	            //这个地方要写在bind后,相当于获取并设置顶点数据
@@ -749,9 +855,64 @@
 	            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 	            this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
 	        }
+
+	        /**
+	         * 画一条水平或垂直的立方线
+	         * @param firstP
+	         * @param secondP
+	         * @param isHorizontal
+	         * @param color
+	         * @param offset
+	         * @returns {Array}
+	         * @private
+	         */
+
 	    }, {
-	        key: 'drawLabel',
-	        value: function drawLabel() {}
+	        key: "_generateBoxLineInfo",
+	        value: function _generateBoxLineInfo(firstP, secondP, isHorizontal, color, offset) {
+	            var flt = void 0,
+	                flb = void 0,
+	                frt = void 0,
+	                frb = void 0,
+	                slt = void 0,
+	                slb = void 0,
+	                srt = void 0,
+	                srb = void 0;
+	            if (isHorizontal) {
+	                flt = [firstP[0], firstP[1] - halfLineWidth, firstP[2] - halfLineWidth];
+	                flb = [firstP[0], firstP[1] + halfLineWidth, firstP[2] - halfLineWidth];
+	                frt = [firstP[0], firstP[1] - halfLineWidth, firstP[2] + halfLineWidth];
+	                frb = [firstP[0], firstP[1] + halfLineWidth, firstP[2] + halfLineWidth];
+
+	                slt = [secondP[0], secondP[1] - halfLineWidth, secondP[2] - halfLineWidth];
+	                slb = [secondP[0], secondP[1] + halfLineWidth, secondP[2] - halfLineWidth];
+	                srt = [secondP[0], secondP[1] - halfLineWidth, secondP[2] + halfLineWidth];
+	                srb = [secondP[0], secondP[1] + halfLineWidth, secondP[2] + halfLineWidth];
+	            } else {
+	                flt = [firstP[0] - halfLineWidth, firstP[1] - halfLineWidth, firstP[2]];
+	                flb = [firstP[0] - halfLineWidth, firstP[1] + halfLineWidth, firstP[2]];
+	                frt = [firstP[0] + halfLineWidth, firstP[1] - halfLineWidth, firstP[2]];
+	                frb = [firstP[0] + halfLineWidth, firstP[1] + halfLineWidth, firstP[2]];
+
+	                slt = [secondP[0] - halfLineWidth, secondP[1] - halfLineWidth, secondP[2]];
+	                slb = [secondP[0] - halfLineWidth, secondP[1] + halfLineWidth, secondP[2]];
+	                srt = [secondP[0] + halfLineWidth, secondP[1] - halfLineWidth, secondP[2]];
+	                srb = [secondP[0] + halfLineWidth, secondP[1] + halfLineWidth, secondP[2]];
+	            }
+
+	            var vertices = [],
+	                colors = [],
+	                indices = [];
+	            vertices = vertices.concat(flt).concat(flb).concat(frt).concat(frb).concat(slt).concat(slb).concat(srt).concat(srb);
+	            colors = colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
+	            indices.push(offset + 4, offset + 5, offset, offset + 5, offset + 1, offset, offset + 4, offset, offset + 6, offset, offset + 2, offset + 6, offset + 2, offset + 3, offset + 6, offset + 3, offset + 7, offset + 6, offset + 3, offset + 1, offset + 7, offset + 1, offset + 5, offset + 7);
+
+	            this.vertices = this.vertices.concat(vertices);
+	            this.colors = this.colors.concat(colors);
+	            this.indices = this.indices.concat(indices);
+	            offset += 8;
+	            return offset;
+	        }
 	    }]);
 
 	    return SCRuler;
@@ -759,47 +920,6 @@
 
 /***/ },
 /* 6 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Created by grenlight on 16/3/23.
-	 *
-	 * 标尺上的刻度的绘制
-	 */
-
-	var SCLabel = exports.SCLabel = function () {
-	    function SCLabel(parentNode, labelList, styleStr) {
-	        _classCallCheck(this, SCLabel);
-
-	        this.canvas = document.createElement("canvas");
-	        this.ctx = this.canvas.getContext("2d");
-
-	        parentNode.appendChild(this.canvas);
-	    }
-
-	    _createClass(SCLabel, [{
-	        key: "draw",
-	        value: function draw(ctx) {
-	            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	            ctx.fillText(someMsg, pixelX, pixelY);
-	        }
-	    }]);
-
-	    return SCLabel;
-	}();
-
-/***/ },
-/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -838,7 +958,6 @@
 
 	        // 是否显示辅助线及刻度
 	        this.isNeedShowScale = params.showScale === undefined ? true : params.showScale;
-	        console.log('this.isNeedShowScale:', this.isNeedShowScale);
 	        this.scaleColor = params.scaleColor ? params.scaleColor : this.fontColor;
 	        this.rgbScaleColor = _Color.Color.hex2rgb(this.scaleColor);
 
@@ -877,7 +996,7 @@
 	}();
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -887,11 +1006,13 @@
 	});
 	exports.SCDomElement = undefined;
 
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/21.
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
-	var _Vector = __webpack_require__(9);
+	var _Vector = __webpack_require__(8);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -910,7 +1031,7 @@
 	        }
 	        this.leftLabels = [];
 	        this.leftLabelsTN = [];
-	        this.createLabels(style);
+	        this.createLabels();
 	    }
 
 	    _createClass(SCDomElement, [{
@@ -921,15 +1042,29 @@
 	        }
 	    }, {
 	        key: 'createLabels',
-	        value: function createLabels(style) {
-	            for (var i = 0; i < 7; i++) {
-	                var div = this.createElement('div', 'position:absolute; text-align:right; font-size: 12px; display:None;' + ' width: 100px; height20px; color:' + style.scaleColor);
-	                var textNode = document.createTextNode("");
-	                div.appendChild(textNode);
-	                this.panel.appendChild(div);
+	        value: function createLabels() {
+	            for (var i = 0; i < 8; i++) {
+	                var _createSingleLabel = this.createSingleLabel();
+
+	                var _createSingleLabel2 = _slicedToArray(_createSingleLabel, 2);
+
+	                var div = _createSingleLabel2[0];
+	                var textNode = _createSingleLabel2[1];
+
 	                this.leftLabels.push(div);
 	                this.leftLabelsTN.push(textNode);
 	            }
+	        }
+	    }, {
+	        key: 'createSingleLabel',
+	        value: function createSingleLabel() {
+	            var degress = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+
+	            var div = this.createElement('div', 'position:absolute; text-align:right; font-size: 12px; display:None;\n         width: 100px; height:12px; line-height:12px; overflow:hidden; color:' + this.style.scaleColor + ';\n         transform:rotate(' + degress + 'deg); -ms-transform:rotate(' + degress + 'deg); \t\n         -moz-transform:rotate(' + degress + 'deg); \t\n         -webkit-transform:rotate(' + degress + 'deg); -o-transform:rotate(' + degress + 'deg)');
+	            var textNode = document.createTextNode("");
+	            div.appendChild(textNode);
+	            this.panel.appendChild(div);
+	            return [div, textNode];
 	        }
 
 	        /**
@@ -940,8 +1075,8 @@
 	         */
 
 	    }, {
-	        key: 'showLabels',
-	        value: function showLabels(arr, matrix) {
+	        key: 'showYLabels',
+	        value: function showYLabels(arr, matrix) {
 	            for (var i = 0; i < arr.length; i++) {
 	                var div = this.leftLabels[i];
 	                var textNode = this.leftLabelsTN[i];
@@ -949,8 +1084,53 @@
 
 	                //将透视空间的坐标转换成实际屏幕坐标
 	                _Vector.Vector3.applyMatrix4(coord, matrix);
-	                div.style.top = (1 - coord[1]) * this.style.height / 2 + 'px';
+	                div.style.top = (1 - coord[1]) * this.style.height / 2 - 6 + 'px';
 	                div.style.left = (1 + coord[0]) * this.style.width / 2 - 110 + 'px';
+	                textNode.nodeValue = arr[i].label;
+	                div.style.display = 'block';
+	            }
+	        }
+	    }, {
+	        key: 'showZLabels',
+	        value: function showZLabels(arr, matrix) {
+	            for (var i = 0; i < arr.length; i++) {
+	                var _createSingleLabel3 = this.createSingleLabel();
+
+	                var _createSingleLabel4 = _slicedToArray(_createSingleLabel3, 2);
+
+	                var div = _createSingleLabel4[0];
+	                var textNode = _createSingleLabel4[1];
+
+	                var coord = arr[i].coord;
+
+	                //将透视空间的坐标转换成实际屏幕坐标
+	                _Vector.Vector3.applyMatrix4(coord, matrix);
+	                div.style.top = (1 - coord[1]) * this.style.height / 2 - 6 + 'px';
+	                div.style.left = (1 + coord[0]) * this.style.width / 2 + 10 + 'px';
+	                div.style.textAlign = 'left';
+	                div.style.fontSize = '8px';
+	                textNode.nodeValue = arr[i].label;
+	                div.style.display = 'block';
+	            }
+	        }
+	    }, {
+	        key: 'showXLabels',
+	        value: function showXLabels(arr, matrix) {
+	            for (var i = 0; i < arr.length; i++) {
+	                var _createSingleLabel5 = this.createSingleLabel(-90);
+
+	                var _createSingleLabel6 = _slicedToArray(_createSingleLabel5, 2);
+
+	                var div = _createSingleLabel6[0];
+	                var textNode = _createSingleLabel6[1];
+
+	                var coord = arr[i].coord;
+
+	                //将透视空间的坐标转换成实际屏幕坐标
+	                _Vector.Vector3.applyMatrix4(coord, matrix);
+	                div.style.top = (1 - coord[1]) * this.style.height / 2 + 45 + 'px';
+	                div.style.left = (1 + coord[0]) * this.style.width / 2 - 55 + 'px';
+	                div.style.fontSize = '8px';
 	                textNode.nodeValue = arr[i].label;
 	                div.style.display = 'block';
 	            }
@@ -958,7 +1138,7 @@
 	    }, {
 	        key: 'createTitle',
 	        value: function createTitle(style) {
-	            var styleStr = 'position:absolute; left:0px; top: 5px; font-size: 20px; font-style:bold;  width:' + style.width + 'px; ' + 'height:30px; text-align: center; z-index: 10';
+	            var styleStr = 'position:absolute; left:0px; top: 15px; margin:0px;font-size: 20px; font-style:bold;  width:' + style.width + 'px; ' + 'height:25px; text-align: center; z-index: 10';
 	            var titleElement = this.createElement('h3', styleStr);
 	            titleElement.innerHTML = this.title;
 	            this.panel.appendChild(titleElement);
@@ -976,7 +1156,7 @@
 	}();
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1023,7 +1203,7 @@
 	}();
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1040,7 +1220,7 @@
 	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.8);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.8);\n}\n";
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1055,7 +1235,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _GLUtils = __webpack_require__(12);
+	var _GLUtils = __webpack_require__(11);
 
 	var GLUtils = _interopRequireWildcard(_GLUtils);
 
@@ -1146,7 +1326,7 @@
 	}();
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1265,7 +1445,7 @@
 	}
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports) {
 
 	"use strict";

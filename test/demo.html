@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>3D 曲面图表 Demo</title>
+    <title>GLSurfaceChart Demo</title>
     <style>
         #root {
             position: absolute;
@@ -15,7 +15,7 @@
 </head>
 <body>
 <div id="root">
-    <h3> 3D 曲面图表 Demo </h3>
+    <h3> GLSurfaceChart Demo </h3>
     <div id="surfaceChart_Container" style="display: block; width:600px; height: 500px;">
 
     </div>
@@ -23,14 +23,14 @@
 
 <script type="text/javascript" src="../bin/surfacechart.js"></script>
 <script type="text/javascript">
-   function  request(url, colCount, completion) {
+   function  request(url, completion) {
        var xhr = new XMLHttpRequest();
        xhr.overrideMimeType("text/plain; charset=utf-8");
         xhr.onreadystatechange = function() {
             if (this.readyState === this.DONE) {
                 if (this.status === 200 || this.status === 0) {
-                    var arr = parseResponseText(this.responseText, colCount);
-                    completion(arr);
+                    var chartData = JSON.parse(this.responseText);
+                    completion(chartData);
                 }
             }
         }
@@ -38,50 +38,23 @@
         xhr.send();
     };
 
-   function parseResponseText(dataStr, colCount) {
-       //将空白,换行符都替换成逗号,然后分割成数组
-       var newStr = dataStr.replace(/\s/g, ',');
-       var arr = newStr.split(',');
-
-       //将一维数组按行列数分割为二维数组
-       var newArr = [];
-       var rowArr = new Array();
-
-       // 数据集很大时,缓存arr.length这种优化有必要的
-       var arrLength = arr.length;
-       for (var i=0; i<arrLength; i++) {
-           var m = i % colCount;
-           if (i > 0 && m === 0) {
-               newArr.push(rowArr.slice(0));
-               rowArr = new Array();
-           }
-           rowArr.push(arr[i]);
-       }
-       newArr.push(rowArr.slice(0));
-       return newArr;
-   }
-
    var container = document.getElementById('surfaceChart_Container');
 
-   request('./data0.txt', 28, function(arr) {
-//       request('./data2.txt', 20, function(arr) {
-
+   request('./data00.txt', function(chartData) {
            // 下边 "可选参数" 的意思是指: 如果不想指定这个字段的信息, 就在 params 里删除这个字段
        var params = {
            width: 600,  // 必设参数,  图表在屏幕上的宽度
            height: 500, // 必设参数,  一般高度要设置得比宽度小,图表会显得比较漂亮
-           usePerspective: false, // 可选参数, 开启透视效果, 默认为 true
+           usePerspective: true, // 可选参数, 开启透视效果, 默认为 true
            showScale: true, // 可选参数, 是否显示辅助线及刻度, 默认为 true
            scaleColor: '#0099fa', // 可选参数, 辅助线及刻度的颜色, 默认为与 title 颜色一样
-           rowTitlePrefix:'A', // 可选参数, 行的名称前缀, 默认为空
-           colTitlePrefix:'B', // 可选参数, 列的名称前缀, 默认为空
            title: '3D 曲面图表 - 0', // 可选参数, 图表的名称, 默认为空
            fontColor: '#fafafa', // 可选参数, 图表上文字的颜色, 默认为0xfafafa
            backgroundColor: '#353535', // 可选参数, 图表背景颜色, 默认为 0x353535
-           surfaceColors:  ['0x215c91',  '0x70af48', '0x3769bd', '0xfec536', '0xa5a5a5', '0xf27934', '0x6aa3d9'] // 可选参数, 曲面顶点颜色,如果要指定, 数组长度至少为 7 位.
+           surfaceColors:  ['0x00ffff',  '0x00ff00', '0x972323', '0xfe3333', '0xa56666', '0x0000ff', '0x00ff00'] // 可选参数, 曲面顶点颜色,如果要指定, 数组长度至少为 7 位.
        };
        // 生成图表实例
-       var chart = new SurfaceChart(arr, params);
+       var chart = new SurfaceChart(chartData, params);
        // 将曲面图显示到网页
        container.appendChild(chart.domElement);
 
@@ -89,7 +62,7 @@
    });
 
    function addAnotherChart() {
-       request('./data1.txt', 20, function(arr) {
+       request('./data00.txt', function(chartData) {
            var params = {
                width: 600,
                height: 500,
@@ -97,9 +70,9 @@
                title: '3D 曲面图表 - 1',
                fontColor: '#353535',
                backgroundColor: '#efefef',
-               surfaceColors:  ['#9fbadb',  '#7ca5d3', '#5296d3', '#4180b7', '#4179ab', '#215c91', '#3769bd']
+               surfaceColors:  ['#9fbadb',  '#7c1221', '#521212', '#411212', '#412121', '#215c91', '#3769bd']
            };
-           var chart = new SurfaceChart(arr, params);
+           var chart = new SurfaceChart(chartData, params);
            container.appendChild(chart.domElement);
        });
    }

@@ -4,16 +4,23 @@
 import {Color} from './webgl/utils/Color.js';
 
 export class  SCDataSource {
-    constructor(dataArr, styleObj) {
+    constructor(chartData, styleObj) {
         this.colorGroup = this._colors(styleObj.surfaceColors);
 
         this.style = styleObj;
         this.drawWidth = styleObj.drawWidth;
         this.drawHeight = styleObj.drawHeight;
-        this.rowCount = dataArr.length;
+
+        this.dataArr = this._parseData(chartData);
+        this.rowCount = this.rowHeaders.length;
         this._validateRowAndCol(this.rowCount);
-        this.colCount = dataArr[0].length;
+        this.colCount = this.colHeaders.length;
         this._validateRowAndCol(this.colCount);
+
+        // this.rowCount = dataArr.length;
+        // this._validateRowAndCol(this.rowCount);
+        // this.colCount = dataArr[0].length;
+        // this._validateRowAndCol(this.colCount);
 
         // 使图形呈现横向展开的状态
         this.isNeedSwapRowCol = false;
@@ -24,7 +31,7 @@ export class  SCDataSource {
         this.simpleRow = 1;
         this.simpleCol = 1;
 
-        let factor = 1.5;//2* window.devicePixelRatio;
+        let factor = 2* window.devicePixelRatio;
         let rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight)/factor;
         let colWidth = (this.isNeedSwapRowCol ?  this.drawHeight : this.drawWidth)/factor ;
         if (this.rowCount > rowWidth) {
@@ -42,9 +49,31 @@ export class  SCDataSource {
         this.dataScale = 0;
 
         //选第一个值做为起始参考值
-        this.minValue = this.maxValue = parseFloat(dataArr[0][0]);
+        this.minValue = this.maxValue = parseFloat(this.dataArr[0][0]);
         this._validateDataType(this.minValue);
-        this._formatData(dataArr);
+        this._formatData(this.dataArr);
+    }
+
+    /**
+     *  处理约定的格式: {colNameArr:["col0", ...], rows:[{rowName:"row0", data:[3, 0, ...]}, ...]}
+     * @param jsonData
+     * @returns {Array}
+     * @private
+     */
+    _parseData(jsonData) {
+        let rowArr = jsonData['rows'];
+        let length = rowArr.length;
+        this.rowHeaders = [];
+        this.colHeaders = jsonData['colNameArr'];
+
+        let  newArr = [];
+        for (let i=0; i<length; i++) {
+            let  item = rowArr[i];
+            this.rowHeaders.push(item.rowName);
+            newArr.push(item.data);
+        }
+
+        return newArr;
     }
 
     _colors(colors) {
@@ -57,7 +86,7 @@ export class  SCDataSource {
 
     _validateRowAndCol(count) {
         if (count < 2) {
-            throw new Error('SurfaceChart 至少需要两行两列数据 ');
+            throw new Error('SurfaceChart 至少需要 2 行 2 列数据 ');
         }
     }
 
@@ -80,7 +109,6 @@ export class  SCDataSource {
         for (let i=0; i<this.rowCount; i+=this.simpleRow) {
             let rowArr = dataArr[Math.floor(i)];
             let newRowArr = [];
-
             for (let j=0; j<this.colCount; j+=this.simpleCol) {
                 let value = parseFloat(rowArr[Math.floor(j)]);
                 this._validateDataType(value);
@@ -96,9 +124,8 @@ export class  SCDataSource {
         //更新行列
         this.rowCount = this.dataSource.length;
         this.colCount = this.dataSource[0].length;
-
         //列间距不能取整, 会导致渲染超出绘制区
-        this.colGap  = (this.drawWidth)/(this._getColCount()-1).toFixed(3);
+        this.colGap  = parseFloat((this.drawWidth/(this._getColCount()-1)).toFixed(4));
 
         //生成刻度集合
         this._calculateScaleLabel();
@@ -128,13 +155,14 @@ export class  SCDataSource {
         this.vertices = [];
         this.colors = [];
         //z 轴远端坐标
-        this.zFar = -(this.colGap*this.rowCount/2);
+        this.zFar = -(this.colGap*(this.rowCount-1)/2);
+
         //初始值给正, 避免后面赋值时的条件判断
         let z = this.zFar - this.colGap;
 
-        for (let i=0; i<this.rowCount; i++) {
+        for (let i=(this.rowCount-1); i >= 0; i--) {
             z += this.colGap;
-            let x =-(this.drawWidth/2.0) -this.colGap;
+            let x =this.scaleStartX -this.colGap;
             let rowData = this.dataSource[i];
             for (let j=0; j<this.colCount; j++) {
                 x += this.colGap;
@@ -143,14 +171,13 @@ export class  SCDataSource {
                     console.log("invalid data: ", i, j, rowData);
                 }
                 this.vertices.push(x, (yValue - this.scaleCenterY) * this.dataScale, z);
+                // this.vertices.push(x, (yValue / this.dataScale - this.scaleCenterY), z);
 
                 let color = this._calculateVertexColor(yValue);
                 this.colors.push(color[0], color[1], color[2]);
             }
         }
         this._generateIndices();
-        // console.log(this.minValue, this.maxValue);
-        // console.log(this.scaleLabels);
     }
 
     _calculateVertexColor(yValue) {
@@ -185,9 +212,9 @@ export class  SCDataSource {
      * @private
      */
     _calculateScaleLabel() {
-        let distance = Math.abs(this.maxValue - this.minValue) ;
+        let distance = this.maxValue - this.minValue ;
         //为了图形美观,坐标上的刻度值应该做一定的舍入
-        let scaleGap = distance /(this.referenceLineCount - 1).toFixed(2);
+        let scaleGap = Math.abs(distance) /(this.referenceLineCount - 1).toFixed(2);
         scaleGap = this._calculateGap(scaleGap, 1);
 
         this.scaleCenterY = this.minValue + distance/2.0;
@@ -211,7 +238,6 @@ export class  SCDataSource {
         }
         this.dataScale = this.drawHeight /
             (Math.abs(this.scaleLabels[0]-this.scaleLabels[this.scaleLabels.length-1]));
-        console.log('dataScale: ',this.drawHeight, this.dataScale, this.scaleCenterY, distance, scaleGap);
     }
 
     /**
