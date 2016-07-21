@@ -203,7 +203,7 @@
 	            var color = this.style.rgbBackgroundColor;
 	            this.gl.clearColor(color[0], color[1], color[2], 1.0);
 
-	            // this.gl.enable(this.gl.DEPTH_TEST);
+	            this.gl.enable(this.gl.DEPTH_TEST);
 	            // this.gl.depthFunc(this.gl.LEQUAL);
 	            //透明度混合
 	            this.gl.enable(this.gl.BLEND);
@@ -293,7 +293,7 @@
 	    }
 
 	    /**
-	     *  处理约定的格式: {colNameArr:[], rows:[{rowName:'', data:[]}, ...]}
+	     *  处理约定的格式: {colNameArr:["col0", ...], rows:[{rowName:"row0", data:[3, 0, ...]}, ...]}
 	     * @param jsonData
 	     * @returns {Array}
 	     * @private
@@ -1217,7 +1217,7 @@
 
 	var pixelVS = exports.pixelVS = "\nattribute vec3 vertexPosition;\nattribute vec3 vertexColor;\n\nuniform mat4 mvMatrix;\nuniform mat4 pMatrix;\n\nvarying vec3 color;\n\nvoid main(void) {\n  color = vertexColor;\n  gl_Position = pMatrix * mvMatrix * vec4(vertexPosition, 1.0);\n}\n";
 
-	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.8);\n  // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.8);\n}\n";
+	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.95);\n}\n";
 
 /***/ },
 /* 10 */

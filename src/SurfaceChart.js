@@ -8,7 +8,7 @@ import { SCRuler } from './SCRuler.js';
 import { SCStyle } from './SCStyle.js';
 import { SCDomElement } from './SCDomElement.js';
 
-import { pixelVS, pixelFS } from './webgl/shaders/shaders.js';
+import { pixelVS, pixelFS } from './shaders.js';
 import { WebGLRenderer } from './webgl/WebGLRenderer.js';
 import { Matrix4 } from './webgl/math/Matrix4.js';
 
@@ -120,9 +120,7 @@ export class SurfaceChart {
         let color = this.style.rgbBackgroundColor;
         this.gl.clearColor(color[0], color[1], color[2], 1.0);
 
-        // this.gl.enable(this.gl.DEPTH_TEST);
-        // this.gl.depthFunc(this.gl.LEQUAL);
-        //透明度混合
+        this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
