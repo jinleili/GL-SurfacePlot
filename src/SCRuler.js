@@ -144,60 +144,6 @@ export class SCRuler {
         this.indices.push(offset, offset+1);
     }
 
-    /**
-     * 画一条水平或垂直的立方线
-     * @param firstP
-     * @param secondP
-     * @param isHorizontal
-     * @param color
-     * @param offset
-     * @returns {Array}
-     * @private
-     */
-
-    _generateBoxLineInfo(firstP, secondP, isHorizontal, color, offset) {
-        let flt, flb, frt, frb, slt, slb, srt, srb;
-        if (isHorizontal) {
-            flt = [firstP[0],firstP[1]-halfLineWidth, firstP[2]-halfLineWidth];
-            flb = [firstP[0],firstP[1]+halfLineWidth, firstP[2]-halfLineWidth];
-            frt = [firstP[0],firstP[1]-halfLineWidth, firstP[2]+halfLineWidth];
-            frb = [firstP[0],firstP[1]+halfLineWidth, firstP[2]+halfLineWidth];
-
-            slt = [secondP[0],secondP[1]-halfLineWidth, secondP[2]-halfLineWidth];
-            slb = [secondP[0],secondP[1]+halfLineWidth, secondP[2]-halfLineWidth];
-            srt = [secondP[0],secondP[1]-halfLineWidth, secondP[2] + halfLineWidth];
-            srb = [secondP[0],secondP[1]+halfLineWidth, secondP[2] + halfLineWidth];
-        } else {
-            flt = [firstP[0]-halfLineWidth,firstP[1]-halfLineWidth, firstP[2]];
-            flb = [firstP[0]-halfLineWidth,firstP[1]+halfLineWidth, firstP[2]];
-            frt = [firstP[0]+halfLineWidth,firstP[1]-halfLineWidth, firstP[2]];
-            frb = [firstP[0]+halfLineWidth,firstP[1]+halfLineWidth, firstP[2]];
-
-            slt = [secondP[0]-halfLineWidth,secondP[1]-halfLineWidth, secondP[2]];
-            slb = [secondP[0]-halfLineWidth,secondP[1]+halfLineWidth, secondP[2]];
-            srt = [secondP[0]+halfLineWidth,secondP[1]-halfLineWidth, secondP[2]];
-            srb = [secondP[0]+halfLineWidth,secondP[1]+halfLineWidth, secondP[2]];
-        }
-
-        let vertices = [], colors = [], indices = [];
-         vertices = vertices.concat(flt).concat(flb).concat(frt).concat(frb).concat(slt).concat(slb).concat(srt).concat(srb);
-        colors = colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
-        indices.push(offset+4, offset+5, offset,
-            offset+5,  offset+1, offset,
-            offset+4, offset, offset+6,
-            offset,  offset+2, offset+6,
-            offset+2, offset+3, offset+6,
-            offset+3, offset+7, offset+6,
-            offset+3, offset+1, offset+7,
-            offset+1, offset+5, offset+7);
-
-        this.vertices = this.vertices.concat(vertices);
-        this.colors = this.colors.concat(colors);
-        this.indices = this.indices.concat(indices);
-        offset += 8;
-        return offset;
-    }
-
     draw() {
         this.gl.lineWidth(2);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);

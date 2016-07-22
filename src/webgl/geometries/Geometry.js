@@ -2,9 +2,7 @@
  * Created by grenlight on 16/3/19.
  */
 
-import { Object3D } from './Object3D.js';
-
-export class Geometry extends Object3D {
+export class Geometry  {
     constructor() {
         super();
         //我们可以使用Object.defineProperty创建一个不能被修改的对象的属性
@@ -19,33 +17,6 @@ export class Geometry extends Object3D {
         this.vetexBuffer = null;
         this.indexBuffer = null;
         this.textureBuffer = null;
-
-        this.faces = [];
-        this.faceVertexUvs = [[]];
-
-        this.skinWeights = [];
-        this.skinIndices = [];
-
-        this.lineDistances = [];
-
-        this.boundingBox = null;
-        this.boundingSphere = null;
-
-        this.hasTangents = false;
-
-        this.dynamic = true; // the intermediate typed arrays will be deleted when set to false
-
-        // 标记是否更新
-
-        this.verticesNeedUpdate = false;
-        this.elementsNeedUpdate = false;
-        this.uvsNeedUpdate = false;
-        this.normalsNeedUpdate = false;
-        this.tangentsNeedUpdate = false;
-        this.colorsNeedUpdate = false;
-        this.lineDistancesNeedUpdate = false;
-
-        this.groupsNeedUpdate = false;
     }
 
     createBuffers(gl) {
