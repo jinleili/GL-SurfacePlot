@@ -17,11 +17,6 @@ export class  SCDataSource {
         this.colCount = this.colHeaders.length;
         this._validateRowAndCol(this.colCount);
 
-        // this.rowCount = dataArr.length;
-        // this._validateRowAndCol(this.rowCount);
-        // this.colCount = dataArr[0].length;
-        // this._validateRowAndCol(this.colCount);
-
         // 使图形呈现横向展开的状态
         this.isNeedSwapRowCol = false;
         if (this.rowCount > this.colCount) {

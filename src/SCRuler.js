@@ -23,7 +23,6 @@ export class SCRuler {
      * 计算标尺线及刻度线的顶点
      * 
      * 标尺默认的状态是个顺时针旋转了 90 度的 L:
-     * 一条标尺线由两条直线(四个三角形)组成
      */
     generateScale() {
         this.vertices = [];
@@ -56,9 +55,11 @@ export class SCRuler {
             }
 
             this.yLabelList.push({coord:bottom, label:label});
-            offset = i*6;
+            offset = i*3;
             this._concatVertices(bottom, top, topRight, offset);
         }
+        offset += 3;
+
         //底部标尺线
         if (this.dataSource.isNeedSwapRowCol) {
             bottom = [-x, y,  -maxZ];
@@ -69,12 +70,10 @@ export class SCRuler {
             top = [-x, y,  -maxZ];
             topRight = [x, y, -maxZ];
         }
-        offset += 6;
-        offset = this._generateBoxLineInfo(bottom, top, false, this.dataSource.style.rgbScaleColor, offset);
-        offset = this._generateBoxLineInfo(top, topRight,true, this.dataSource.style.rgbScaleColor, offset);
+        this._concatVertices(bottom, top, topRight, offset);
 
         // x 刻度线
-      this._generateScaleX(x, y, -maxZ, offset);
+      this._generateScaleX(x, y, -maxZ, offset+3);
     }
 
     _generateScaleX(startX, startY, startZ, offset) {
@@ -99,7 +98,8 @@ export class SCRuler {
             let near = [startX+offsetX, startY, newStartZ+scaleLength];
             let far = [startX+offsetX, startY, newStartZ];
 
-            offset = this._generateBoxLineInfo(near, far, false, this.dataSource.style.rgbScaleColor, offset);
+            this._concatVertices2(near, far, offset);
+            offset += 2;
 
             this.xLabelList.push({coord:near, label:this.dataSource.colHeaders[i*jumpX]});
         }
@@ -107,9 +107,6 @@ export class SCRuler {
     }
 
     _generateScaleZ(startX, startY, startZ, offset) {
-        // if (this.dataSource.isNeedSwapRowCol === true) {
-        //     startX = (-startX) - scaleLength;
-        // }
         let distance  = Math.abs(this.dataSource.zFar)*2;
         let maxCountZ = distance / scaleGap;
         let jumpZ = 1;
@@ -124,38 +121,27 @@ export class SCRuler {
             offsetZ = stepZ*(i+0.5);
             let left = [startX, startY, startZ-offsetZ];
             let right = [startX+scaleLength, startY, startZ-offsetZ];
-            offset = this._generateBoxLineInfo(left, right, true, this.dataSource.style.rgbScaleColor, offset);
+            this._concatVertices2(left, right, offset);
+            offset += 2;
             this.zLabelList.push({coord:right, label:this.dataSource.rowHeaders[i*jumpZ]});
         }
     }
     
     _concatVertices(bottom, top, topRight, offset) {
         let color = this.dataSource.style.rgbScaleColor;
-        this.vertices.push( bottom[0], bottom[1]+halfLineWidth, bottom[2],
-            bottom[0], bottom[1]-halfLineWidth, bottom[2],
-            top[0], top[1]+halfLineWidth, top[2],
-            top[0], top[1]-halfLineWidth, top[2],
-            topRight[0], topRight[1]+halfLineWidth, topRight[2],
-            topRight[0], topRight[1]-halfLineWidth, topRight[2] );
-        this.colors = this.colors.concat(color).concat(color).concat(color).concat(color).concat(color).concat(color);
-        this.indices.push(offset, offset+1, offset+2,
-            offset+1,  offset+3, offset+2,
-            offset+2, offset+3, offset+4,
-            offset+3,  offset+5, offset+4);
+        this.vertices.push( bottom[0], bottom[1], bottom[2],
+            top[0], top[1], top[2],
+            topRight[0], topRight[1], topRight[2] );
+        this.colors = this.colors.concat(color).concat(color).concat(color).concat(color);
+        this.indices.push(offset, offset+1, offset+1, offset+2);
     }
 
-    draw() {
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
-        //这个地方要写在bind后,相当于获取并设置顶点数据
-        this.gl.vertexAttribPointer(this.prg.vertexPosition, 3, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(this.prg.vertexPosition);
-
-        this.gl.enableVertexAttribArray(this.prg.vertexColor);
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
-        this.gl.vertexAttribPointer(this.prg.vertexColor, 3, this.gl.FLOAT, false, 0, 0);
-
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-        this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
+    _concatVertices2(bottom, top,  offset) {
+        let color = this.dataSource.style.rgbScaleColor;
+        this.vertices.push( bottom[0], bottom[1], bottom[2],
+            top[0], top[1], top[2]);
+        this.colors = this.colors.concat(color).concat(color);
+        this.indices.push(offset, offset+1);
     }
 
     /**
@@ -212,4 +198,18 @@ export class SCRuler {
         return offset;
     }
 
+    draw() {
+        this.gl.lineWidth(2);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vetexBuffer);
+        //这个地方要写在bind后,相当于获取并设置顶点数据
+        this.gl.vertexAttribPointer(this.prg.vertexPosition, 3, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(this.prg.vertexPosition);
+
+        this.gl.enableVertexAttribArray(this.prg.vertexColor);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colorBuffer);
+        this.gl.vertexAttribPointer(this.prg.vertexColor, 3, this.gl.FLOAT, false, 0, 0);
+
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        this.gl.drawElements(this.gl.LINES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
+    }
 }
