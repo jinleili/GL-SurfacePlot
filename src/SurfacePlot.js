@@ -12,13 +12,13 @@ import { pixelVS, pixelFS } from './shaders.js';
 import { WebGLRenderer } from './webgl/WebGLRenderer.js';
 import { Matrix4 } from './webgl/math/Matrix4.js';
 
-export class SurfaceChart {
+export class SurfacePlot {
     constructor(chartData,  params) {
         if (params.width < 300 || params.height < 200) {
-            throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
+            throw new Error('SurfacePlot 绘制区域的宽不能小于 300, 高不能小于 200');
         }
         if (!chartData || !chartData['rows'] || chartData['rows'].length === 0) {
-            throw new Error('SurfaceChart 需要有效数组做为初始化参数');
+            throw new Error('SurfacePlot 需要有效数组做为初始化参数');
         }
 
         this.style = new SCStyle(params);

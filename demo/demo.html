@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<script type="text/javascript" src="../bin/surfacechart.js"></script>
+<script type="text/javascript" src="../bin/surfaceplot.js"></script>
 <script type="text/javascript">
    function  request(url, completion) {
        var xhr = new XMLHttpRequest();
@@ -54,7 +54,7 @@
            surfaceColors:  ['0x00ffff',  '0x00ff00', '0x972323', '0xfe3333', '0xa56666', '0x0000ff', '0x00ff00'] // 可选参数, 曲面顶点颜色,如果要指定, 数组长度至少为 7 位.
        };
        // 生成图表实例
-       var chart = new SurfaceChart(chartData, params);
+       var chart = new SurfacePlot(chartData, params);
        // 将曲面图显示到网页
        container.appendChild(chart.domElement);
 
@@ -72,7 +72,7 @@
                backgroundColor: '#efefef',
                surfaceColors:  ['#9fbadb',  '#7c1221', '#521212', '#411212', '#412121', '#215c91', '#3769bd']
            };
-           var chart = new SurfaceChart(chartData, params);
+           var chart = new SurfacePlot(chartData, params);
            container.appendChild(chart.domElement);
        });
    }

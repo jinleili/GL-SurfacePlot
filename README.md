@@ -1,15 +1,15 @@
-# SurfaceChart
+# SurfacePlot
 
-基于 ES 6 (ECMAScript 2015)  的 3D 曲面图表组件.
+Using ES6 (ECMAScript 2015) developed 3D surface plot component.
 
 
-### 源码编译
+### How to build
 
 > $ npm install 
 
 > $ build.sh
 
-### 调用方法
+### Usage
 
 ``` javascript
 
@@ -28,10 +28,13 @@
    };
  
  // 生成图表实例
- var chart = new SurfaceChart(chartData, params);
+ var chart = new SurfacePlot(chartData, params);
  
  // 将曲面图显示到网页
  var container = document.getElementById('surfaceChart_Container');
  container.appendChild(chart.domElement);
        
 ```
+
+###License
+ GLSurfaceChart is released under the (http://opensource.org/licenses/MIT) MIT License.

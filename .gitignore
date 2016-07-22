@@ -1,6 +1,5 @@
 .DS_Store
 Thumbs.db
-Desktop.ini
 npm-debug.log
 node_modules
 node_modules/*

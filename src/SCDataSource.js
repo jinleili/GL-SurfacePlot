@@ -86,13 +86,13 @@ export class  SCDataSource {
 
     _validateRowAndCol(count) {
         if (count < 2) {
-            throw new Error('SurfaceChart 至少需要 2 行 2 列数据 ');
+            throw new Error('SurfacePlot 至少需要 2 行 2 列数据 ');
         }
     }
 
     _validateDataType(data) {
         if (data === undefined) {
-            throw new Error('SurfaceChart 需要的数据项必须是整数或浮点数');
+            throw new Error('SurfacePlot 需要的数据项必须是整数或浮点数');
         }
     }
 

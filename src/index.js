@@ -2,6 +2,6 @@
  * Created by grenlight on 16/3/17.
  */
 
-import {SurfaceChart} from './SurfaceChart.js';
+import {SurfacePlot} from './SurfacePlot.js';
 
-window.SurfaceChart = SurfaceChart;
+window.SurfacePlot = SurfacePlot;

@@ -9,7 +9,7 @@ module.exports = [
         entry: entryFile,
         output: {
             path: outPath,
-            filename: 'surfacechart.js'
+            filename: 'surfaceplot.js'
         },
         module: {
             loaders: [{
@@ -23,7 +23,7 @@ module.exports = [
         entry: entryFile,
         output: {
             path: outPath,
-            filename: 'surfacechart.min.js'
+            filename: 'surfaceplot.min.js'
         },
         module: {
             loaders: [{

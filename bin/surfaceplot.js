@@ -46,11 +46,11 @@
 
 	'use strict';
 
-	var _SurfaceChart = __webpack_require__(1);
+	var _SurfacePlot = __webpack_require__(1);
 
-	window.SurfaceChart = _SurfaceChart.SurfaceChart; /**
-	                                                   * Created by grenlight on 16/3/17.
-	                                                   */
+	window.SurfacePlot = _SurfacePlot.SurfacePlot; /**
+	                                                * Created by grenlight on 16/3/17.
+	                                                */
 
 /***/ },
 /* 1 */
@@ -61,7 +61,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
-	exports.SurfaceChart = undefined;
+	exports.SurfacePlot = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/17.
@@ -85,15 +85,15 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var SurfaceChart = exports.SurfaceChart = function () {
-	    function SurfaceChart(chartData, params) {
-	        _classCallCheck(this, SurfaceChart);
+	var SurfacePlot = exports.SurfacePlot = function () {
+	    function SurfacePlot(chartData, params) {
+	        _classCallCheck(this, SurfacePlot);
 
 	        if (params.width < 300 || params.height < 200) {
-	            throw new Error('SurfaceChart 绘制区域的宽不能小于 300, 高不能小于 200');
+	            throw new Error('SurfacePlot 绘制区域的宽不能小于 300, 高不能小于 200');
 	        }
 	        if (!chartData || !chartData['rows'] || chartData['rows'].length === 0) {
-	            throw new Error('SurfaceChart 需要有效数组做为初始化参数');
+	            throw new Error('SurfacePlot 需要有效数组做为初始化参数');
 	        }
 
 	        this.style = new _SCStyle.SCStyle(params);
@@ -176,7 +176,7 @@
 	     */
 
 
-	    _createClass(SurfaceChart, [{
+	    _createClass(SurfacePlot, [{
 	        key: 'initProgram',
 	        value: function initProgram() {
 	            this.prg = this.gl.makeProgram(_shaders.pixelVS, _shaders.pixelFS);
@@ -204,8 +204,6 @@
 	            this.gl.clearColor(color[0], color[1], color[2], 1.0);
 
 	            this.gl.enable(this.gl.DEPTH_TEST);
-	            // this.gl.depthFunc(this.gl.LEQUAL);
-	            //透明度混合
 	            this.gl.enable(this.gl.BLEND);
 	            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
@@ -216,7 +214,7 @@
 	        }
 	    }]);
 
-	    return SurfaceChart;
+	    return SurfacePlot;
 	}();
 
 /***/ },
@@ -330,14 +328,14 @@
 	        key: '_validateRowAndCol',
 	        value: function _validateRowAndCol(count) {
 	            if (count < 2) {
-	                throw new Error('SurfaceChart 至少需要 2 行 2 列数据 ');
+	                throw new Error('SurfacePlot 至少需要 2 行 2 列数据 ');
 	            }
 	        }
 	    }, {
 	        key: '_validateDataType',
 	        value: function _validateDataType(data) {
 	            if (data === undefined) {
-	                throw new Error('SurfaceChart 需要的数据项必须是整数或浮点数');
+	                throw new Error('SurfacePlot 需要的数据项必须是整数或浮点数');
 	            }
 	        }
 
