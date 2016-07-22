@@ -4,11 +4,6 @@
 
 export class Geometry  {
     constructor() {
-        super();
-        //我们可以使用Object.defineProperty创建一个不能被修改的对象的属性
-        // Object.defineProperty(this, 'id', {
-        //   value: GREN.GeometryIdCount++
-        // });
         this.vertices = [];
         this.colors = []; // one-to-one vertex colors, used in Points and Line
         this.indices = [];
