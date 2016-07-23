@@ -1,7 +1,7 @@
 var webpack = require('webpack');
 var path = require('path');
 
-var entryFile = path.join(__dirname, './src/index.js');
+var entryFile = path.join(__dirname, './src/SurfacePlot.js');
 var srcPath = path.join(__dirname, './src');
 var outPath = path.join(__dirname, './bin');
 module.exports = [

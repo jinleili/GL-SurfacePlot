@@ -46,18 +46,6 @@
 
 	'use strict';
 
-	var _SurfacePlot = __webpack_require__(1);
-
-	window.SurfacePlot = _SurfacePlot.SurfacePlot; /**
-	                                                * Created by grenlight on 16/3/17.
-	                                                */
-
-/***/ },
-/* 1 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
@@ -67,21 +55,21 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/17.
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
-	var _SCDataSource = __webpack_require__(2);
+	var _SCDataSource = __webpack_require__(1);
 
-	var _SCSurface = __webpack_require__(4);
+	var _SCSurface = __webpack_require__(3);
 
-	var _SCRuler = __webpack_require__(5);
+	var _SCRuler = __webpack_require__(4);
 
-	var _SCStyle = __webpack_require__(6);
+	var _SCStyle = __webpack_require__(5);
 
-	var _SCDomElement = __webpack_require__(7);
+	var _SCDomElement = __webpack_require__(6);
 
-	var _shaders = __webpack_require__(9);
+	var _shaders = __webpack_require__(8);
 
-	var _WebGLRenderer = __webpack_require__(10);
+	var _WebGLRenderer = __webpack_require__(9);
 
-	var _Matrix = __webpack_require__(12);
+	var _Matrix = __webpack_require__(11);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -217,8 +205,10 @@
 	    return SurfacePlot;
 	}();
 
+	window.SurfacePlot = SurfacePlot;
+
 /***/ },
-/* 2 */
+/* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -233,7 +223,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _Color = __webpack_require__(3);
+	var _Color = __webpack_require__(2);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -513,9 +503,35 @@
 
 	    return SCDataSource;
 	}();
+	/**
+	 * 刻度平面与三角形边的交点
+	 * 除 3 个顶点之外, 只要与其中一条边有交点, 定与另两条边中的其中一条也有相交
+	 */
+
+
+	var CrossoverPoint = function () {
+	    /**
+	     *
+	     * @param owner
+	     * @param color
+	     * @param neighbor 邻居
+	     * @param neighborType {number} 邻居类型 0=原三角形顶点, 1=另一个交点
+	     */
+
+	    function CrossoverPoint(owner, color, neighbor, neighborType) {
+	        _classCallCheck(this, CrossoverPoint);
+	    }
+
+	    _createClass(CrossoverPoint, [{
+	        key: 'setNeighbor',
+	        value: function setNeighbor() {}
+	    }]);
+
+	    return CrossoverPoint;
+	}();
 
 /***/ },
-/* 3 */
+/* 2 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -556,7 +572,7 @@
 	}();
 
 /***/ },
-/* 4 */
+/* 3 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -671,7 +687,7 @@
 	}();
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -861,7 +877,7 @@
 	}();
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -875,7 +891,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/22.
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
-	var _Color = __webpack_require__(3);
+	var _Color = __webpack_require__(2);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -938,7 +954,7 @@
 	}();
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -954,7 +970,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by grenlight on 16/3/21.
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
-	var _Vector = __webpack_require__(8);
+	var _Vector = __webpack_require__(7);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1098,7 +1114,7 @@
 	}();
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1145,7 +1161,7 @@
 	}();
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1162,7 +1178,7 @@
 	var pixelFS = exports.pixelFS = "\nprecision mediump float;\n\nvarying vec3 color;\n\nvoid main(void) {\n  gl_FragColor = vec4(color, 0.95);\n}\n";
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1177,7 +1193,7 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 
-	var _GLUtils = __webpack_require__(11);
+	var _GLUtils = __webpack_require__(10);
 
 	var GLUtils = _interopRequireWildcard(_GLUtils);
 
@@ -1268,7 +1284,7 @@
 	}();
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1387,7 +1403,7 @@
 	}
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports) {
 
 	"use strict";

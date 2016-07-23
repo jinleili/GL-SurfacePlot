@@ -253,3 +253,23 @@ export class  SCDataSource {
     }
 
 }
+/**
+ * 刻度平面与三角形边的交点
+ * 除 3 个顶点之外, 只要与其中一条边有交点, 定与另两条边中的其中一条也有相交
+ */
+class  CrossoverPoint {
+    /**
+     *
+     * @param owner
+     * @param color
+     * @param neighbor 邻居
+     * @param neighborType {number} 邻居类型 0=原三角形顶点, 1=另一个交点
+     */
+    constructor(owner, color, neighbor, neighborType) {
+
+    }
+
+    setNeighbor() {
+
+    }
+}

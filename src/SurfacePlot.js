@@ -131,3 +131,5 @@ export class SurfacePlot {
     }
 
 }
+
+window.SurfacePlot = SurfacePlot;
