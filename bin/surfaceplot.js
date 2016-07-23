@@ -1297,7 +1297,6 @@
 	exports.createElementBufferWithData = createElementBufferWithData;
 	exports.isPowerOf2 = isPowerOf2;
 	exports.createTextureWithData = createTextureWithData;
-	exports.createImageByURL = createImageByURL;
 	/**
 	 * Created by grenlight on 16/3/18.
 	 */
@@ -1390,16 +1389,6 @@
 	  this.bindTexture(this.TEXTURE_2D, null);
 
 	  return texture;
-	}
-
-	function createImageByURL(url, callBack) {
-	  var image = new Image();
-	  image.onload = function () {
-	    if (callBack) {
-	      callBack(image);
-	    }
-	  };
-	  image.src = url;
 	}
 
 /***/ },

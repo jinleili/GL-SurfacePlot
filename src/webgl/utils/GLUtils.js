@@ -87,13 +87,3 @@ export function createTextureWithData(image, repeating=false) {
 
   return texture;
 }
-
-export  function createImageByURL(url, callBack) {
-  let image = new Image();
-  image.onload = () => {
-    if (callBack) {
-      callBack(image);
-    }
-  };
-  image.src = url;
-}
