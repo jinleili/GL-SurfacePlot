@@ -517,7 +517,6 @@
 	     * @param neighbor 邻居
 	     * @param neighborType {number} 邻居类型 0=原三角形顶点, 1=另一个交点
 	     */
-
 	    function CrossoverPoint(owner, color, neighbor, neighborType) {
 	        _classCallCheck(this, CrossoverPoint);
 	    }
@@ -1408,7 +1407,6 @@
 	/**
 	 * Created by grenlight on 16/1/28.
 	 */
-
 	var Matrix4 = exports.Matrix4 = function () {
 	    function Matrix4() {
 	        _classCallCheck(this, Matrix4);
