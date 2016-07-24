@@ -252,31 +252,32 @@ export class  SCDataSource {
         }
     }
 
-}
-/**
- * 刻度平面与三角形边的交点
- * 除 3 个顶点之外, 只要与其中一条边有交点, 定与另两条边中的其中一条也有相交
- *
- * 设曲面上的 4 个构成的最小曲面元的坐标点分别为 p00, p01, p10, p11, 则有
- * p00, p01 && p10, p11 在 x 轴平面,
- * p00, p10 && p01, p11在 z 平面
- * 角 [p01, p00, p10] && [p10, p11, p01]是直角
- *
- * 要计算 y 刻度平面 s 与线段 p00, p10 的交点:
- * 先检查 s 是否在p00.y 与 p10.y 的区间 L 内, 在则计算 s.y 离 p00.y 的距离与 L 的比: r = s.y  / (p00.y - p10.y)
- * 交点 = p00 + (p10-p00) * r
- *
- */
-
-function calCrossoverPoint(planeY, pStart, pEnd) {
-    if ((planeY >= pStart[1] && planeY <= pEnd[1]) ||
-        (planeY <= pStart[1] && planeY >= pEnd[1])) {
-        let rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);
-        let cpZ = (pEnd[2] - pStart[2]) * rate;
-        return [pStart[0], planeY, cpZ];
+    /**
+     * 求刻度平面与三角形边的交点
+     * 除 3 个顶点之外, 只要与其中一条边有交点, 定与另两条边中的其中一条也有相交
+     *
+     * 设曲面上的 4 个构成的最小曲面元的坐标点分别为 p00, p01, p10, p11, 则有
+     * p00, p01 && p10, p11 在 x 轴平面,
+     * p00, p10 && p01, p11在 z 平面
+     * 角 [p01, p00, p10] && [p10, p11, p01]是直角
+     *
+     * 要计算 y 刻度平面 s 与线段 p00, p10 的交点:
+     * 先检查 s 是否在p00.y 与 p10.y 的区间 L 内, 在则计算 s.y 离 p00.y 的距离与 L 的比: r = s.y  / (p00.y - p10.y)
+     * 交点 = p00 + (p10-p00) * r
+     *
+     */
+    calCrossoverPoint(planeY, pStart, pEnd) {
+        if ((planeY >= pStart[1] && planeY <= pEnd[1]) ||
+            (planeY <= pStart[1] && planeY >= pEnd[1])) {
+            let rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);
+            let cpZ = (pEnd[2] - pStart[2]) * rate;
+            return [pStart[0], planeY, cpZ];
+        }
+        return null;
     }
-    return null;
+
 }
+
 
 class  CrossoverPoint {
     /**
