@@ -149,6 +149,8 @@ export class  SCDataSource {
      */
     _generateVertices() {
         this.vertices = [];
+        this.indices = [];
+
         this.colors = [];
         //z 轴远端坐标
         this.zFar = -(this.colGap*(this.rowCount-1)/2);
@@ -156,10 +158,13 @@ export class  SCDataSource {
         //初始值给正, 避免后面赋值时的条件判断
         let z = this.zFar - this.colGap;
 
-        for (let i=(this.rowCount-1); i >= 0; i--) {
+        let maxRowIndex = (this.rowCount-1);
+        for (let i=maxRowIndex; i >= 0; i--) {
             z += this.colGap;
             let x =this.scaleStartX -this.colGap;
             let rowData = this.dataSource[i];
+            let rowTemp = (maxRowIndex - i) * this.colCount;
+
             for (let j=0; j<this.colCount; j++) {
                 x += this.colGap;
                 let yValue = rowData[j] ;
@@ -170,9 +175,16 @@ export class  SCDataSource {
 
                 let color = this._calculateVertexColor(yValue);
                 this.colors.push(color[0], color[1], color[2]);
+
+                if (rowTemp > 0 && j >=1) {
+                    let current = rowTemp + j;
+                    let pre = current -1;
+                    let preRow = current - this.colCount;
+                    let preRowPre = preRow - 1;
+                    this.indices.push(preRowPre, preRow, pre,  preRow, current, pre);
+                }
             }
         }
-        this._generateIndices();
     }
 
     _calculateVertexColor(yValue) {
@@ -185,20 +197,6 @@ export class  SCDataSource {
             pre = current;
         }
         return this.colorGroup[0];
-    }
-    
-    _generateIndices() {
-        this.indices = [];
-        for (let i=1; i<this.rowCount; i++) {
-            let rowTemp = i * this.colCount;
-            for (let j=1; j<this.colCount; j++) {
-                let current = rowTemp + j;
-                let pre = current -1;
-                let preRow = current - this.colCount;
-                let preRowPre = preRow - 1;
-                this.indices.push(preRowPre, preRow, pre,  preRow, current, pre);
-            }
-        }
     }
     
     /**
@@ -250,6 +248,13 @@ export class  SCDataSource {
             let newValue = (gap/limit).toFixed(1) * limit;
             return this._calculateGap(newValue,  limit);
         }
+    }
+
+    /**
+     * 通过刻度平面与三角形边的交点做曲面细分
+     */
+    _subdividingSurface() {
+
     }
 
     /**

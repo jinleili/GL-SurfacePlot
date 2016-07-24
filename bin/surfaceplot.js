@@ -390,6 +390,8 @@
 	        key: '_generateVertices',
 	        value: function _generateVertices() {
 	            this.vertices = [];
+	            this.indices = [];
+
 	            this.colors = [];
 	            //z 轴远端坐标
 	            this.zFar = -(this.colGap * (this.rowCount - 1) / 2);
@@ -397,10 +399,13 @@
 	            //初始值给正, 避免后面赋值时的条件判断
 	            var z = this.zFar - this.colGap;
 
-	            for (var i = this.rowCount - 1; i >= 0; i--) {
+	            var maxRowIndex = this.rowCount - 1;
+	            for (var i = maxRowIndex; i >= 0; i--) {
 	                z += this.colGap;
 	                var x = this.scaleStartX - this.colGap;
 	                var rowData = this.dataSource[i];
+	                var rowTemp = (maxRowIndex - i) * this.colCount;
+
 	                for (var j = 0; j < this.colCount; j++) {
 	                    x += this.colGap;
 	                    var yValue = rowData[j];
@@ -411,9 +416,16 @@
 
 	                    var color = this._calculateVertexColor(yValue);
 	                    this.colors.push(color[0], color[1], color[2]);
+
+	                    if (rowTemp > 0 && j >= 1) {
+	                        var current = rowTemp + j;
+	                        var pre = current - 1;
+	                        var preRow = current - this.colCount;
+	                        var preRowPre = preRow - 1;
+	                        this.indices.push(preRowPre, preRow, pre, preRow, current, pre);
+	                    }
 	                }
 	            }
-	            this._generateIndices();
 	        }
 	    }, {
 	        key: '_calculateVertexColor',
@@ -427,21 +439,6 @@
 	                pre = current;
 	            }
 	            return this.colorGroup[0];
-	        }
-	    }, {
-	        key: '_generateIndices',
-	        value: function _generateIndices() {
-	            this.indices = [];
-	            for (var i = 1; i < this.rowCount; i++) {
-	                var rowTemp = i * this.colCount;
-	                for (var j = 1; j < this.colCount; j++) {
-	                    var current = rowTemp + j;
-	                    var pre = current - 1;
-	                    var preRow = current - this.colCount;
-	                    var preRowPre = preRow - 1;
-	                    this.indices.push(preRowPre, preRow, pre, preRow, current, pre);
-	                }
-	            }
 	        }
 
 	        /**
@@ -499,6 +496,14 @@
 	                return this._calculateGap(newValue, limit);
 	            }
 	        }
+
+	        /**
+	         * 通过刻度平面与三角形边的交点做曲面细分
+	         */
+
+	    }, {
+	        key: '_subdividingSurface',
+	        value: function _subdividingSurface() {}
 
 	        /**
 	         * 求刻度平面与三角形边的交点
@@ -639,7 +644,6 @@
 	            var indices = dataSource.indices.slice(lower, uper);
 	            var indexBuffer = gl.createElementBufferWithData(indices);
 	            this.indexBufferList.push({ buffer: indexBuffer, length: uper - lower - 1 });
-	            console.log(maxLength, boundary, count, uper);
 	        }
 	    }
 
