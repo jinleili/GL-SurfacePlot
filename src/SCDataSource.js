@@ -23,17 +23,17 @@ export class  SCDataSource {
             this.isNeedSwapRowCol = true;
         }
         // 数据采样: 如果数据的行或列数超出了绘制区宽高,则按绘制区宽高值采样行列数据
-        this.simpleRow = 1;
-        this.simpleCol = 1;
+        this.sampleRow = 1;
+        this.sampleCol = 1;
 
         let factor = 2* window.devicePixelRatio;
         let rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight)/factor;
         let colWidth = (this.isNeedSwapRowCol ?  this.drawHeight : this.drawWidth)/factor ;
         if (this.rowCount > rowWidth) {
-            this.simpleRow = Math.floor( this.rowCount / rowWidth);
+            this.sampleRow = Math.floor( this.rowCount / rowWidth);
         }
         if (this.colCount > colWidth) {
-            this.simpleCol = Math.floor(this.colCount / colWidth);
+            this.sampleCol = Math.floor(this.colCount / colWidth);
         }
 
         //参考线条数
@@ -101,18 +101,19 @@ export class  SCDataSource {
     _formatData(dataArr) {
         this.dataSource = [];
 
-        for (let i=0; i<this.rowCount; i+=this.simpleRow) {
+        for (let i=0; i<this.rowCount; i+=this.sampleRow) {
             let rowArr = dataArr[Math.floor(i)];
             let newRowArr = [];
-            for (let j=0; j<this.colCount; j+=this.simpleCol) {
+            for (let j=0; j<this.colCount; j+=this.sampleCol) {
                 let value = parseFloat(rowArr[Math.floor(j)]);
                 this._validateDataType(value);
+                newRowArr.push(value);
+
                 if (value < this.minValue) {
                     this.minValue = value;
                 } else if (value > this.maxValue) {
                     this.maxValue = value;
                 }
-                newRowArr.push(value);
             }
             this.dataSource.push(newRowArr);
         }
@@ -166,7 +167,6 @@ export class  SCDataSource {
                     console.log("invalid data: ", i, j, rowData);
                 }
                 this.vertices.push(x, (yValue - this.scaleCenterY) * this.dataScale, z);
-                // this.vertices.push(x, (yValue / this.dataScale - this.scaleCenterY), z);
 
                 let color = this._calculateVertexColor(yValue);
                 this.colors.push(color[0], color[1], color[2]);
@@ -266,7 +266,7 @@ export class  SCDataSource {
      * 交点 = p00 + (p10-p00) * r
      *
      */
-    calCrossoverPoint(planeY, pStart, pEnd) {
+    _calCrossoverPoint(planeY, pStart, pEnd) {
         if ((planeY >= pStart[1] && planeY <= pEnd[1]) ||
             (planeY <= pStart[1] && planeY >= pEnd[1])) {
             let rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);

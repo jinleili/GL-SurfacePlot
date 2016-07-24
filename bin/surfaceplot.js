@@ -249,17 +249,17 @@
 	            this.isNeedSwapRowCol = true;
 	        }
 	        // 数据采样: 如果数据的行或列数超出了绘制区宽高,则按绘制区宽高值采样行列数据
-	        this.simpleRow = 1;
-	        this.simpleCol = 1;
+	        this.sampleRow = 1;
+	        this.sampleCol = 1;
 
 	        var factor = 2 * window.devicePixelRatio;
 	        var rowWidth = (this.isNeedSwapRowCol ? this.drawWidth : this.drawHeight) / factor;
 	        var colWidth = (this.isNeedSwapRowCol ? this.drawHeight : this.drawWidth) / factor;
 	        if (this.rowCount > rowWidth) {
-	            this.simpleRow = Math.floor(this.rowCount / rowWidth);
+	            this.sampleRow = Math.floor(this.rowCount / rowWidth);
 	        }
 	        if (this.colCount > colWidth) {
-	            this.simpleCol = Math.floor(this.colCount / colWidth);
+	            this.sampleCol = Math.floor(this.colCount / colWidth);
 	        }
 
 	        //参考线条数
@@ -337,18 +337,19 @@
 	        value: function _formatData(dataArr) {
 	            this.dataSource = [];
 
-	            for (var i = 0; i < this.rowCount; i += this.simpleRow) {
+	            for (var i = 0; i < this.rowCount; i += this.sampleRow) {
 	                var rowArr = dataArr[Math.floor(i)];
 	                var newRowArr = [];
-	                for (var j = 0; j < this.colCount; j += this.simpleCol) {
+	                for (var j = 0; j < this.colCount; j += this.sampleCol) {
 	                    var value = parseFloat(rowArr[Math.floor(j)]);
 	                    this._validateDataType(value);
+	                    newRowArr.push(value);
+
 	                    if (value < this.minValue) {
 	                        this.minValue = value;
 	                    } else if (value > this.maxValue) {
 	                        this.maxValue = value;
 	                    }
-	                    newRowArr.push(value);
 	                }
 	                this.dataSource.push(newRowArr);
 	            }
@@ -407,7 +408,6 @@
 	                        console.log("invalid data: ", i, j, rowData);
 	                    }
 	                    this.vertices.push(x, (yValue - this.scaleCenterY) * this.dataScale, z);
-	                    // this.vertices.push(x, (yValue / this.dataScale - this.scaleCenterY), z);
 
 	                    var color = this._calculateVertexColor(yValue);
 	                    this.colors.push(color[0], color[1], color[2]);
@@ -499,15 +499,36 @@
 	                return this._calculateGap(newValue, limit);
 	            }
 	        }
+
+	        /**
+	         * 求刻度平面与三角形边的交点
+	         * 除 3 个顶点之外, 只要与其中一条边有交点, 定与另两条边中的其中一条也有相交
+	         *
+	         * 设曲面上的 4 个构成的最小曲面元的坐标点分别为 p00, p01, p10, p11, 则有
+	         * p00, p01 && p10, p11 在 x 轴平面,
+	         * p00, p10 && p01, p11在 z 平面
+	         * 角 [p01, p00, p10] && [p10, p11, p01]是直角
+	         *
+	         * 要计算 y 刻度平面 s 与线段 p00, p10 的交点:
+	         * 先检查 s 是否在p00.y 与 p10.y 的区间 L 内, 在则计算 s.y 离 p00.y 的距离与 L 的比: r = s.y  / (p00.y - p10.y)
+	         * 交点 = p00 + (p10-p00) * r
+	         *
+	         */
+
+	    }, {
+	        key: '_calCrossoverPoint',
+	        value: function _calCrossoverPoint(planeY, pStart, pEnd) {
+	            if (planeY >= pStart[1] && planeY <= pEnd[1] || planeY <= pStart[1] && planeY >= pEnd[1]) {
+	                var rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);
+	                var cpZ = (pEnd[2] - pStart[2]) * rate;
+	                return [pStart[0], planeY, cpZ];
+	            }
+	            return null;
+	        }
 	    }]);
 
 	    return SCDataSource;
 	}();
-	/**
-	 * 刻度平面与三角形边的交点
-	 * 除 3 个顶点之外, 只要与其中一条边有交点, 定与另两条边中的其中一条也有相交
-	 */
-
 
 	var CrossoverPoint = function () {
 	    /**

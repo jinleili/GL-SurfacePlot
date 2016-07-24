@@ -30,7 +30,6 @@ export  class SCSurface {
             let indices = dataSource.indices.slice(lower, uper);
             let indexBuffer = gl.createElementBufferWithData(indices);
             this.indexBufferList.push({buffer:indexBuffer, length:uper-lower-1});
-            console.log(maxLength, boundary, count, uper);
         }
     }
 
