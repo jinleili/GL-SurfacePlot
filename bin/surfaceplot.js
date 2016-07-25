@@ -361,6 +361,7 @@
 
 	            //生成刻度集合
 	            this._calculateScaleLabel();
+
 	            //转换数据点为屏幕顶点坐标
 	            this._generateVertices();
 	        }
@@ -389,6 +390,8 @@
 	    }, {
 	        key: '_generateVertices',
 	        value: function _generateVertices() {
+	            this.edgeCrossoverArr = new Array();
+
 	            this.vertices = [];
 	            this.indices = [];
 
@@ -400,6 +403,8 @@
 	            var z = this.zFar - this.colGap;
 
 	            var maxRowIndex = this.rowCount - 1;
+	            var lastRowData = null;
+
 	            for (var i = maxRowIndex; i >= 0; i--) {
 	                z += this.colGap;
 	                var x = this.scaleStartX - this.colGap;
@@ -417,6 +422,8 @@
 	                    var color = this._calculateVertexColor(yValue);
 	                    this.colors.push(color[0], color[1], color[2]);
 
+	                    this._subdividingSurface(i, j);
+
 	                    if (rowTemp > 0 && j >= 1) {
 	                        var current = rowTemp + j;
 	                        var pre = current - 1;
@@ -425,7 +432,10 @@
 	                        this.indices.push(preRowPre, preRow, pre, preRow, current, pre);
 	                    }
 	                }
+
+	                lastRowData = rowData;
 	            }
+	            console.log(this.edgeCrossoverArr);
 	        }
 	    }, {
 	        key: '_calculateVertexColor',
@@ -503,7 +513,44 @@
 
 	    }, {
 	        key: '_subdividingSurface',
-	        value: function _subdividingSurface() {}
+	        value: function _subdividingSurface(rowIndex, colIndex) {
+	            var dataIndex = (this.colCount * rowIndex + colIndex) * 3;
+	            var currentP = [this.vertices[dataIndex], this.vertices[dataIndex + 1], this.vertices[dataIndex + 2]];
+	            var preP = [this.vertices[dataIndex - 3], this.vertices[dataIndex - 2], this.vertices[dataIndex - 1]];
+
+	            //只有一条边
+	            if (rowIndex === 0) {
+	                if (colIndex > 0) {
+	                    this.edgeCrossoverArr[colIndex - 1] = this._calAllCrossoverPointInEdge(preP, currentP);
+	                }
+	            } else {
+	                var preRowDataIndex = dataIndex - this.colCount * 3;
+	                var preRowP = [this.vertices[preRowDataIndex], this.vertices[preRowDataIndex + 1], this.vertices[preRowDataIndex + 2]];
+	                /**
+	                 * 有两种情况:
+	                 * 最左边第一列有两条边;
+	                 * 其它列有 3 条边;
+	                 */
+	                var index = rowIndex * (colIndex * 3 + 1) + 2;
+	                this.edgeCrossoverArr[index] = this._calAllCrossoverPointInEdge(preRowP, currentP);
+	                if (colIndex > 0) {
+	                    this.edgeCrossoverArr[index - 1] = this._calAllCrossoverPointInEdge(preP, currentP);
+	                    this.edgeCrossoverArr[index - 2] = this._calAllCrossoverPointInEdge(preRowP, preP);
+	                }
+	            }
+	        }
+	    }, {
+	        key: '_calAllCrossoverPointInEdge',
+	        value: function _calAllCrossoverPointInEdge(pStart, pEnd) {
+	            var arr = [];
+	            for (var i = 0; i < this.scaleLabels.length; i++) {
+	                var cp = this._calCrossoverPoint(this.scaleLabels[i], pStart, pEnd);
+	                if (cp) {
+	                    arr.push(cp);
+	                }
+	            }
+	            return arr;
+	        }
 
 	        /**
 	         * 求刻度平面与三角形边的交点
@@ -523,6 +570,8 @@
 	    }, {
 	        key: '_calCrossoverPoint',
 	        value: function _calCrossoverPoint(planeY, pStart, pEnd) {
+	            console.log(planeY, pStart, pEnd);
+
 	            if (planeY >= pStart[1] && planeY <= pEnd[1] || planeY <= pStart[1] && planeY >= pEnd[1]) {
 	                var rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);
 	                var cpZ = (pEnd[2] - pStart[2]) * rate;

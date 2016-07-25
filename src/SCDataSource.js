@@ -125,6 +125,7 @@ export class  SCDataSource {
 
         //生成刻度集合
         this._calculateScaleLabel();
+
         //转换数据点为屏幕顶点坐标
         this._generateVertices();
     }
@@ -148,6 +149,8 @@ export class  SCDataSource {
      * 顶点由内向外生成
      */
     _generateVertices() {
+        this.edgeCrossoverArr = new Array();
+
         this.vertices = [];
         this.indices = [];
 
@@ -159,6 +162,8 @@ export class  SCDataSource {
         let z = this.zFar - this.colGap;
 
         let maxRowIndex = (this.rowCount-1);
+        let lastRowData = null;
+
         for (let i=maxRowIndex; i >= 0; i--) {
             z += this.colGap;
             let x =this.scaleStartX -this.colGap;
@@ -176,6 +181,8 @@ export class  SCDataSource {
                 let color = this._calculateVertexColor(yValue);
                 this.colors.push(color[0], color[1], color[2]);
 
+                this._subdividingSurface(i, j);
+
                 if (rowTemp > 0 && j >=1) {
                     let current = rowTemp + j;
                     let pre = current -1;
@@ -184,7 +191,11 @@ export class  SCDataSource {
                     this.indices.push(preRowPre, preRow, pre,  preRow, current, pre);
                 }
             }
+
+            lastRowData = rowData;
         }
+        console.log(this.edgeCrossoverArr);
+
     }
 
     _calculateVertexColor(yValue) {
@@ -253,8 +264,43 @@ export class  SCDataSource {
     /**
      * 通过刻度平面与三角形边的交点做曲面细分
      */
-    _subdividingSurface() {
+    _subdividingSurface(rowIndex, colIndex) {
+        let dataIndex = (this.colCount * rowIndex + colIndex) * 3;
+        let currentP = [this.vertices[dataIndex], this.vertices[dataIndex+1], this.vertices[dataIndex+2]];
+        let preP = [this.vertices[dataIndex-3], this.vertices[dataIndex-2], this.vertices[dataIndex-1]];
 
+        //只有一条边
+        if (rowIndex === 0) {
+            if (colIndex > 0) {
+                this.edgeCrossoverArr[colIndex-1] =  this._calAllCrossoverPointInEdge(preP, currentP);
+            }
+        } else {
+            let preRowDataIndex = dataIndex  - this.colCount * 3;
+            let preRowP = [this.vertices[preRowDataIndex], this.vertices[preRowDataIndex+1], this.vertices[preRowDataIndex+2]];
+            /**
+             * 有两种情况:
+             * 最左边第一列有两条边;
+             * 其它列有 3 条边;
+             */
+            let  index = rowIndex * ((colIndex * 3) + 1) + 2;
+            this.edgeCrossoverArr[index] =  this._calAllCrossoverPointInEdge(preRowP, currentP);
+            if (colIndex>0) {
+                this.edgeCrossoverArr[index-1] =  this._calAllCrossoverPointInEdge(preP, currentP);
+                this.edgeCrossoverArr[index-2] =  this._calAllCrossoverPointInEdge(preRowP, preP);
+            }
+        }
+
+    }
+
+    _calAllCrossoverPointInEdge(pStart, pEnd) {
+        let arr = [];
+        for (let i=0; i<this.scaleLabels.length; i++) {
+            let cp = this._calCrossoverPoint(this.scaleLabels[i], pStart, pEnd);
+            if (cp) {
+                arr.push(cp);
+            }
+        }
+        return arr;
     }
 
     /**
@@ -272,6 +318,8 @@ export class  SCDataSource {
      *
      */
     _calCrossoverPoint(planeY, pStart, pEnd) {
+        console.log(planeY, pStart, pEnd);
+
         if ((planeY >= pStart[1] && planeY <= pEnd[1]) ||
             (planeY <= pStart[1] && planeY >= pEnd[1])) {
             let rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);
