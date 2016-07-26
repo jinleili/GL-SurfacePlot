@@ -149,6 +149,7 @@ export class  SCDataSource {
      * 顶点由内向外生成
      */
     _generateVertices() {
+        // 每条边与 y 平面的交点
         this.edgeCrossoverArr = new Array();
 
         this.vertices = [];
@@ -157,15 +158,16 @@ export class  SCDataSource {
         this.colors = [];
         //z 轴远端坐标
         this.zFar = -(this.colGap*(this.rowCount-1)/2);
+        // this.zFar = (this.colGap*(this.rowCount-1)/2);
+
 
         //初始值给正, 避免后面赋值时的条件判断
-        let z = this.zFar - this.colGap;
+        let z = -this.zFar;
 
         let maxRowIndex = (this.rowCount-1);
         let lastRowData = null;
 
         for (let i=maxRowIndex; i >= 0; i--) {
-            z += this.colGap;
             let x =this.scaleStartX -this.colGap;
             let rowData = this.dataSource[i];
             let rowTemp = (maxRowIndex - i) * this.colCount;
@@ -193,6 +195,7 @@ export class  SCDataSource {
             }
 
             lastRowData = rowData;
+            z -= this.colGap;
         }
         console.log(this.edgeCrossoverArr);
 
@@ -262,6 +265,23 @@ export class  SCDataSource {
     }
 
     /**
+     * 计算细分线条
+     */
+    _calSubdividingLines() {
+        this.lineVertices = [];
+        this.lineIndices = [];
+
+        let maxRowIndex = (this.rowCount-1);
+        let lastRowData = null;
+
+        for (let i=1; i < this.rowCount; i++) {
+            for (let j = 0; j < this.colCount; j++) {
+
+            }
+        }
+    }
+
+    /**
      * 通过刻度平面与三角形边的交点做曲面细分
      */
     _subdividingSurface(rowIndex, colIndex) {
@@ -295,7 +315,7 @@ export class  SCDataSource {
     _calAllCrossoverPointInEdge(pStart, pEnd) {
         let arr = [];
         for (let i=0; i<this.scaleLabels.length; i++) {
-            let cp = this._calCrossoverPoint(this.scaleLabels[i], pStart, pEnd);
+            let cp = this._calCrossoverPoint(this.scaleLabels[i] * this.dataScale, pStart, pEnd);
             if (cp) {
                 arr.push(cp);
             }
@@ -318,8 +338,6 @@ export class  SCDataSource {
      *
      */
     _calCrossoverPoint(planeY, pStart, pEnd) {
-        console.log(planeY, pStart, pEnd);
-
         if ((planeY >= pStart[1] && planeY <= pEnd[1]) ||
             (planeY <= pStart[1] && planeY >= pEnd[1])) {
             let rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);

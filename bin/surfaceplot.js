@@ -390,6 +390,7 @@
 	    }, {
 	        key: '_generateVertices',
 	        value: function _generateVertices() {
+	            // 每条边与 y 平面的交点
 	            this.edgeCrossoverArr = new Array();
 
 	            this.vertices = [];
@@ -398,15 +399,16 @@
 	            this.colors = [];
 	            //z 轴远端坐标
 	            this.zFar = -(this.colGap * (this.rowCount - 1) / 2);
+	            // this.zFar = (this.colGap*(this.rowCount-1)/2);
+
 
 	            //初始值给正, 避免后面赋值时的条件判断
-	            var z = this.zFar - this.colGap;
+	            var z = -this.zFar;
 
 	            var maxRowIndex = this.rowCount - 1;
 	            var lastRowData = null;
 
 	            for (var i = maxRowIndex; i >= 0; i--) {
-	                z += this.colGap;
 	                var x = this.scaleStartX - this.colGap;
 	                var rowData = this.dataSource[i];
 	                var rowTemp = (maxRowIndex - i) * this.colCount;
@@ -434,6 +436,7 @@
 	                }
 
 	                lastRowData = rowData;
+	                z -= this.colGap;
 	            }
 	            console.log(this.edgeCrossoverArr);
 	        }
@@ -508,6 +511,24 @@
 	        }
 
 	        /**
+	         * 计算细分线条
+	         */
+
+	    }, {
+	        key: '_calSubdividingLines',
+	        value: function _calSubdividingLines() {
+	            this.lineVertices = [];
+	            this.lineIndices = [];
+
+	            var maxRowIndex = this.rowCount - 1;
+	            var lastRowData = null;
+
+	            for (var i = 1; i < this.rowCount; i++) {
+	                for (var j = 0; j < this.colCount; j++) {}
+	            }
+	        }
+
+	        /**
 	         * 通过刻度平面与三角形边的交点做曲面细分
 	         */
 
@@ -544,7 +565,7 @@
 	        value: function _calAllCrossoverPointInEdge(pStart, pEnd) {
 	            var arr = [];
 	            for (var i = 0; i < this.scaleLabels.length; i++) {
-	                var cp = this._calCrossoverPoint(this.scaleLabels[i], pStart, pEnd);
+	                var cp = this._calCrossoverPoint(this.scaleLabels[i] * this.dataScale, pStart, pEnd);
 	                if (cp) {
 	                    arr.push(cp);
 	                }
@@ -570,8 +591,6 @@
 	    }, {
 	        key: '_calCrossoverPoint',
 	        value: function _calCrossoverPoint(planeY, pStart, pEnd) {
-	            console.log(planeY, pStart, pEnd);
-
 	            if (planeY >= pStart[1] && planeY <= pEnd[1] || planeY <= pStart[1] && planeY >= pEnd[1]) {
 	                var rate = (planeY - pStart[1]) / (pEnd[1] - pStart[1]);
 	                var cpZ = (pEnd[2] - pStart[2]) * rate;
